@@ -132,7 +132,7 @@ namespace AcademiaLoja.Infra.Data
                     .IsRequired();
 
                 // Relacionamentos
-                entity.HasOne<ApplicationUser>()
+                entity.HasOne(o => o.User)
                     .WithMany()
                     .HasForeignKey(o => o.UserId)
                     .OnDelete(DeleteBehavior.Restrict);

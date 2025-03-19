@@ -4,8 +4,8 @@ namespace AcademiaLoja.Domain.Entities
 {
     public class Order
     {
-        public int Id { get; private set; }
-        public int UserId { get; private set; }
+        public Guid Id { get; private set; }
+        public Guid UserId { get; private set; }
         public decimal TotalAmount { get; private set; }
         public string Status { get; private set; }
         public string PaymentStatus { get; private set; }

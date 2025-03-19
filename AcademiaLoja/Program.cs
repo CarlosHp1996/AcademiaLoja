@@ -7,6 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using AcademiaLoja.Domain.Security;
+using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Infra.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,11 @@ string connectionString = Environment.GetEnvironmentVariable("ACADEMIALOJA_DB_CO
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddScoped<AccessManager>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 
 // Add Cors (chamada do frontend)
 builder.Services.AddCors(options =>
