@@ -2,8 +2,8 @@
 {
     public class ProductCategory
     {
-        public int ProductId { get; private set; }
-        public int CategoryId { get; private set; }
+        public Guid ProductId { get; private set; }
+        public Guid CategoryId { get; private set; }
 
         // Navegação
         public virtual Product Product { get; private set; }
