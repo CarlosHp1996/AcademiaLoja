@@ -10,7 +10,6 @@
   <ItemGroup>
     <Folder Include="Models\Dtos\" />
     <Folder Include="Mapping\" />
-    <Folder Include="Queries\" />
     <Folder Include="Services\Interfaces\" />
   </ItemGroup>
 

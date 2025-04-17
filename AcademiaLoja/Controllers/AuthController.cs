@@ -69,5 +69,69 @@ namespace AcademiaLoja.Web.Controllers
 
             return BadRequest(result.Errors);
         }
+
+        [SwaggerOperation(
+           Summary = "Update User",
+           Description = "Update existing user information.")]
+        [SwaggerResponse(200, "Success", typeof(Result<UpdateUserResponse>))]
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromBody] UpdateUserRequest request)
+        {
+            var command = new UpdateUserCommand(request);
+            var result = await _mediator.Send(command);
+
+            if (result.HasSuccess)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+
+        [SwaggerOperation(
+           Summary = "Get User by ID",
+           Description = "Retrieve a specific user by ID.")]
+        [SwaggerResponse(200, "Success", typeof(Result<GetUserByIdResponse>))]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var query = new GetUserByIdQuery(id);
+            var result = await _mediator.Send(query);
+
+            if (result.HasSuccess)
+                return Ok(result);
+
+            return NotFound(result.Errors);
+        }
+
+        [SwaggerOperation(
+           Summary = "Get All Users",
+           Description = "Retrieve all users with optional filtering and pagination.")]
+        [SwaggerResponse(200, "Success", typeof(Result<GetAllUsersResponse>))]
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] GetAllUsersRequest request)
+        {
+            var query = new GetAllUsersQuery(request);
+            var result = await _mediator.Send(query);
+
+            if (result.HasSuccess)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+
+        [SwaggerOperation(
+           Summary = "Delete User",
+           Description = "Delete a user by ID.")]
+        [SwaggerResponse(200, "Success", typeof(Result<DeleteUserResponse>))]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var command = new DeleteUserCommand(id);
+            var result = await _mediator.Send(command);
+
+            if (result.HasSuccess)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
     }
 }
