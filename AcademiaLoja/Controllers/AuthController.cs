@@ -26,7 +26,6 @@ namespace AcademiaLoja.Web.Controllers
               Description = "Create a new user.")]
         [SwaggerResponse(200, "Success", typeof(Result<CreateUserResponse>))]
         [HttpPost("create")]
-        [AllowAnonymous]
         public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
         {
             var command = new CreateUserCommand(request);
@@ -43,10 +42,26 @@ namespace AcademiaLoja.Web.Controllers
            Description = "User login and authentication token generation.")]
         [SwaggerResponse(200, "Sucesso", typeof(Result<CreateLoginResponse>))]
         [HttpPost("login")]
-        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] CreateLoginRequest request)
         {
             var command = new CreateLoginCommand(request);
+            var result = await _mediator.Send(command);
+
+            if (result.HasSuccess)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+
+        [SwaggerOperation(
+           Summary = "User Logout",
+           Description = "Logs out the user and invalidates the JWT token.")]
+        [SwaggerResponse(200, "Sucesso", typeof(Result<CreateLogoutResponse>))]
+        [HttpPost("logout")]
+        //[Authorize(Roles = "Usuario,Admin")]
+        public async Task<IActionResult> Logout([FromBody] CreateLogoutRequest request)
+        {
+            var command = new CreateLogoutCommand(request);
             var result = await _mediator.Send(command);
 
             if (result.HasSuccess)
