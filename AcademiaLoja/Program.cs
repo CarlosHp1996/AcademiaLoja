@@ -23,6 +23,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // Add Cors (chamada do frontend)
 builder.Services.AddCors(options =>
@@ -94,7 +95,7 @@ builder.Services.AddAuthorization(auth =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aesthetic API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "AcademiaLoja API", Version = "v1" });
 
     // Configuration for Swagger to use JWT
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -134,7 +135,7 @@ if (app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aesthetic API v1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AcademiaLoja API v1");
     //c.RoutePrefix = string.Empty;
     c.RoutePrefix = "swagger";
 });

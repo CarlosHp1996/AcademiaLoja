@@ -1,6 +1,7 @@
 ﻿using AcademiaLoja.Application.Commands.Security;
 using AcademiaLoja.Application.Models.Requests.Security;
 using AcademiaLoja.Application.Models.Responses.Security;
+using AcademiaLoja.Application.Queries.Security;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -90,7 +91,7 @@ namespace AcademiaLoja.Web.Controllers
            Summary = "Get User by ID",
            Description = "Retrieve a specific user by ID.")]
         [SwaggerResponse(200, "Success", typeof(Result<GetUserByIdResponse>))]
-        [HttpGet("{id}")]
+        [HttpGet("get/{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var query = new GetUserByIdQuery(id);
@@ -106,7 +107,7 @@ namespace AcademiaLoja.Web.Controllers
            Summary = "Get All Users",
            Description = "Retrieve all users with optional filtering and pagination.")]
         [SwaggerResponse(200, "Success", typeof(Result<GetAllUsersResponse>))]
-        [HttpGet]
+        [HttpGet("get")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllUsersRequest request)
         {
             var query = new GetAllUsersQuery(request);
@@ -122,7 +123,7 @@ namespace AcademiaLoja.Web.Controllers
            Summary = "Delete User",
            Description = "Delete a user by ID.")]
         [SwaggerResponse(200, "Success", typeof(Result<DeleteUserResponse>))]
-        [HttpDelete("{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var command = new DeleteUserCommand(id);

@@ -2,12 +2,12 @@
 {
     public class ProductAttribute
     {
-        public Guid Id { get; private set; }
-        public Guid ProductId { get; private set; }
-        public string Key { get; private set; }
-        public string Value { get; private set; }
+        public Guid Id { get;  set; }
+        public Guid ProductId { get;  set; }
+        public string Key { get;  set; }
+        public string Value { get;  set; }
 
         // Navegação
-        public virtual Product Product { get; private set; }
+        public virtual Product Product { get;  set; }
     }
 }
