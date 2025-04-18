@@ -42,7 +42,7 @@ namespace AcademiaLoja.Application.Commands.Security.Handlers
             {
                 Id = user.Id,
                 Name = user.UserName,
-                Token = _accessManager.GenerateToken(user), //Generate token
+                Token = await _accessManager.GenerateToken(user), //Generate token
                 Mensage = "Login successfully."
             };
 

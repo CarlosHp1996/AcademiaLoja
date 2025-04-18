@@ -4,9 +4,14 @@
     {
         public int Take { get; set; } = 100;
         public int? Page { get; set; }
+        public int PageSize { get; set; } = 10;
         public int? Offset { get; set; }
         public string? SortingProp { get; set; }
-        public bool Ascending { get; set; } = true;
+        public bool Ascending { get; set; } = true;        
+
+        // Ordenação
+        public string? SortBy { get; set; }
+        public string? SortDirection { get; set; } // "asc" ou "desc"
 
         internal int Skip
         {
