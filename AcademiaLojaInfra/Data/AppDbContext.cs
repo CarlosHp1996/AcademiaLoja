@@ -18,6 +18,8 @@ namespace AcademiaLoja.Infra.Data
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<Inventory> Inventory { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<SubCategory> SubCategories { get; set; }
+        public DbSet<CategorySubCategory> CategorySubCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -89,6 +91,11 @@ namespace AcademiaLoja.Infra.Data
 
                 // Relacionamentos
                 entity.HasMany(c => c.ProductCategories)
+                    .WithOne(pc => pc.Category)
+                    .HasForeignKey(pc => pc.CategoryId);
+
+                // Relacionamentos
+                entity.HasMany(p => p.CategorySubCategories)
                     .WithOne(pc => pc.Category)
                     .HasForeignKey(pc => pc.CategoryId);
             });
@@ -213,6 +220,32 @@ namespace AcademiaLoja.Infra.Data
 
                 entity.Property(p => p.PaymentDate)
                     .IsRequired();
+            });
+
+            // Configuração de SucCategory
+            modelBuilder.Entity<SubCategory>(entity =>
+            {
+                entity.ToTable("SubCategories");
+                entity.HasKey(c => c.Id);
+
+                entity.Property(c => c.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(c => c.Description)
+                    .HasMaxLength(500);
+
+                // Relacionamentos
+                entity.HasMany(c => c.CategorySubCategories)
+                    .WithOne(pc => pc.SubCategory)
+                    .HasForeignKey(pc => pc.SubCategoryId);
+            });
+
+            // Configuração de ProductCategory
+            modelBuilder.Entity<CategorySubCategory>(entity =>
+            {
+                entity.ToTable("CategorySubCategories");
+                entity.HasKey(pc => new { pc.CategoryId, pc.SubCategoryId });
             });
         }
     }

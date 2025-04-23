@@ -27,6 +27,20 @@ namespace AcademiaLoja.Application.Commands.Categories.Handlers
                 };
                 _ = await _categoryRepository.AddAsync(category);
 
+                //CRIAR UM CREATE CATEGORY NO CATEGORYREPOSITORY E ADD CATEGORYSUBCATEGORY: (IGUAL EM CREATEPRODUCT)
+                // Associar subcategorias à categoria
+                //var productCategories = new List<ProductCategory>();
+                //foreach (var category in categories)
+                //{
+                //    var productCategory = new ProductCategory
+                //    {
+                //        ProductId = product.Id,
+                //        CategoryId = category.Id
+                //    };
+                //    _context.ProductCategories.Add(productCategory);
+                //    productCategories.Add(productCategory);
+                //}
+
                 var response = new CategoryResponse
                 {
                     Id = category.Id,
