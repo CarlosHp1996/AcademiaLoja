@@ -26,6 +26,20 @@ namespace AcademiaLoja.Application.Commands.Categories.Handlers
                     return result;
                 }
 
+                //CRIAR UM UPDATE CATEGORY NO CATEGORYREPOSITORY E ADD: (IGUAL EM UPDATEPRODUCT)
+                // Associar subcategorias à categoria
+                //var productCategories = new List<ProductCategory>();
+                //foreach (var category in categories)
+                //{
+                //    var productCategory = new ProductCategory
+                //    {
+                //        ProductId = product.Id,
+                //        CategoryId = category.Id
+                //    };
+                //    _context.ProductCategories.Add(productCategory);
+                //    productCategories.Add(productCategory);
+                //}
+
                 category.Id = request.Id;
                 category.Name = request.Request.Name;
                 category.Description = request.Request.Description;
