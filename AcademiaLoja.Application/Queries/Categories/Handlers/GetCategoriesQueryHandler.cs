@@ -20,7 +20,7 @@ namespace AcademiaLoja.Application.Queries.Categories.Handlers
             {
                 var result = new Result<IEnumerable<CategoryResponse>>();
                 //ALTERAR E CRIAR UM GET PERSONALIZADO IGUAL DO PRODUCT
-                var categories = await _categoryRepository.GetAll(request.filter.Take, request.filter.Offset, request.filter.SortingProp, request.filter.Ascending);
+                var categories = await _categoryRepository.GetAll(request.Filter.Take, request.Filter.Offset, request.Filter.SortingProp, request.Filter.Ascending);
 
                 if (!categories.Result(out var count).Any())
                 {

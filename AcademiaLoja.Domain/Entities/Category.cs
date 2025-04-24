@@ -7,7 +7,7 @@
         public string Description { get; set; }
 
         // Navegação
-        public virtual ICollection<ProductCategory> ProductCategories { get; private set; } = new List<ProductCategory>();
+        public virtual ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
         public virtual ICollection<CategorySubCategory> CategorySubCategories { get; set; } = new List<CategorySubCategory>();
     }
 }

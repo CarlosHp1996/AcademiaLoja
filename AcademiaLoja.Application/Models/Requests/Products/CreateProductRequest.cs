@@ -29,6 +29,9 @@ namespace AcademiaLoja.Application.Models.Requests.Products
         public List<Guid> CategoryIds { get; set; } = new List<Guid>();
 
         // Atributos do produto (sabor, marca, etc.)
-        public List<ProductAttributeDto> Attributes { get; set; } = new List<ProductAttributeDto>();
+        public List<ProductAttributeRequest> Attributes { get; set; } = new List<ProductAttributeRequest>();
+
+        [Required]
+        public List<Guid> BrandIds { get; set; } = new List<Guid>();
     }
 }

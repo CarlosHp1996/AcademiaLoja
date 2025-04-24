@@ -16,10 +16,12 @@ namespace AcademiaLoja.Infra.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
-        public DbSet<Inventory> Inventory { get; set; }
+        public DbSet<Inventory> Inventories { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<SubCategory> SubCategories { get; set; }
         public DbSet<CategorySubCategory> CategorySubCategories { get; set; }
+        public DbSet<Brand> Brands { get; set; }
+        public DbSet<ProductBrand> ProductBrands { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -246,6 +248,32 @@ namespace AcademiaLoja.Infra.Data
             {
                 entity.ToTable("CategorySubCategories");
                 entity.HasKey(pc => new { pc.CategoryId, pc.SubCategoryId });
+            });
+
+            // Configuração de Brand
+            modelBuilder.Entity<Brand>(entity =>
+            {
+                entity.ToTable("Brands");
+                entity.HasKey(c => c.Id);
+
+                entity.Property(c => c.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(c => c.Description)
+                    .HasMaxLength(500);
+
+                // Relacionamentos
+                entity.HasMany(c => c.ProductBrands)
+                    .WithOne(pc => pc.Brand)
+                    .HasForeignKey(pc => pc.BrandId);
+            });
+
+            // Configuração de ProductBrand
+            modelBuilder.Entity<ProductBrand>(entity =>
+            {
+                entity.ToTable("ProductBrands");
+                entity.HasKey(pc => new { pc.ProductId, pc.BrandId });
             });
         }
     }
