@@ -1,14 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace AcademiaLoja.Application.Models.Dtos
+﻿namespace AcademiaLoja.Application.Models.Dtos
 {
     public class ProductAttributeDto
     {
-        public Guid Id { get; set; }
-        [Required]
-        public string Key { get; set; }
+        public Guid? Id { get; set; }
+        public string? Key { get; set; }
 
-        [Required]
-        public string Value { get; set; }
+        public string? Value { get; set; }
     }
 }

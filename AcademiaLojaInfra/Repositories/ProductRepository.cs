@@ -7,7 +7,6 @@ using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Domain.Helpers;
 using AcademiaLoja.Infra.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace AcademiaLoja.Infra.Repositories
 {
@@ -23,8 +22,9 @@ namespace AcademiaLoja.Infra.Repositories
         public async Task<AsyncOutResult<IEnumerable<Product>, int>> Get(GetProductsRequestFilter filter)
         {
             // Extrair parâmetros de paginação e ordenação do filtro
-            int pageSize = filter.PageSize;
-            int offset = (int)((filter.Page - 1) * pageSize);
+            int page = filter.Page ?? 1;
+            int pageSize = filter.PageSize ?? 10;
+            int offset = (page - 1) * pageSize;
             string sortBy = filter.SortBy ?? "Name";
             bool ascending = filter.SortDirection?.ToLower() != "desc";
 
@@ -149,16 +149,16 @@ namespace AcademiaLoja.Infra.Repositories
                 // Atualizar propriedades básicas do produto
                 product.Name = request.Name;
                 product.Description = request.Description;
-                product.Price = request.Price;
-                product.StockQuantity = request.StockQuantity;
+                product.Price = (decimal)request.Price;
+                product.StockQuantity = (int)request.StockQuantity;
                 product.ImageUrl = request.ImageUrl;
-                product.IsActive = request.IsActive;
+                product.IsActive = (bool)request.IsActive;
                 product.UpdatedAt = DateTime.UtcNow;
 
                 // Atualizar estoque no inventário
                 if (product.Inventory != null)
                 {
-                    product.Inventory.Quantity = request.StockQuantity;
+                    product.Inventory.Quantity = (int)request.StockQuantity;
                     product.Inventory.LastUpdated = DateTime.UtcNow;
                 }
                 else
@@ -167,7 +167,7 @@ namespace AcademiaLoja.Infra.Repositories
                     product.Inventory = new Inventory
                     {
                         ProductId = product.Id,
-                        Quantity = request.StockQuantity,
+                        Quantity = (int)request.StockQuantity,
                         LastUpdated = DateTime.UtcNow
                     };
                 }
@@ -278,6 +278,18 @@ namespace AcademiaLoja.Infra.Repositories
                     categories.Add(category);
                 }
 
+                // Verificar se todas as marcas existem
+                var brands = new List<Brand>();
+                foreach (var brandId in request.BrandIds)
+                {
+                    var brand = await _context.Brands.FindAsync(brandId);
+
+                    if (brand == null)
+                        throw new Exception($"Brand with ID {brandId} not found.");
+
+                    brands.Add(brand);
+                }
+
                 // Criar o produto
                 var now = DateTime.UtcNow;
                 var product = new Product
@@ -304,7 +316,7 @@ namespace AcademiaLoja.Infra.Repositories
                     Quantity = request.StockQuantity,
                     LastUpdated = now
                 };
-                _context.Inventory.Add(inventory);
+                _context.Inventories.Add(inventory);
 
                 // Associar categorias ao produto
                 var productCategories = new List<ProductCategory>();
@@ -317,6 +329,19 @@ namespace AcademiaLoja.Infra.Repositories
                     };
                     _context.ProductCategories.Add(productCategory);
                     productCategories.Add(productCategory);
+                }
+
+                // Associar marcas ao produto
+                var productBrands = new List<ProductBrand>();
+                foreach (var brand in brands)
+                {
+                    var productBrand = new ProductBrand
+                    {
+                        ProductId = product.Id,
+                        BrandId = brand.Id
+                    };
+                    _context.ProductBrands.Add(productBrand);
+                    productBrands.Add(productBrand);
                 }
 
                 // Adicionar atributos do produto
@@ -350,6 +375,12 @@ namespace AcademiaLoja.Infra.Repositories
                     CreatedAt = product.CreatedAt,
                     UpdatedAt = product.UpdatedAt,
                     Categories = categories.Select(c => new CategoryDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description
+                    }).ToList(),
+                    Brands = brands.Select(c => new BrandDto
                     {
                         Id = c.Id,
                         Name = c.Name,

@@ -1,13 +1,7 @@
 ﻿using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Models.Responses.Categories;
 using AcademiaLoja.Domain.Helpers;
-using AutoMapper;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AcademiaLoja.Application.Queries.Categories.Handlers
 {
@@ -46,7 +40,7 @@ namespace AcademiaLoja.Application.Queries.Categories.Handlers
             }
             catch (Exception ex)
             {
-                throw new Exception("Erro ao listar as categorias", ex);
+                throw new Exception("Erro ao listar a categoria", ex);
             }
         }
     }

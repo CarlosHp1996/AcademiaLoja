@@ -1,5 +1,6 @@
 ﻿using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Models.Dtos;
+using AcademiaLoja.Application.Models.Filters;
 using AcademiaLoja.Application.Models.Responses.Products;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
@@ -21,20 +22,17 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
 
             try
             {
-                // Buscar produtos com filtros  
-                var productsResult = await _repository.Get(query.Filter);
-
-                // Correctly retrieve the result and count using the out parameter  
+                var filter = query.Filter ?? new GetProductsRequestFilter();
+                var productsResult = await _repository.Get(filter);
                 var products = productsResult.Result(out int totalCount).ToList();
-                int pageCount = (int)Math.Ceiling(totalCount / (double)query.Filter.PageSize);
+                int pageSize = filter.PageSize ?? 10;
+                int pageCount = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-                // Buscar dados dos filtros  
                 var filtersData = await _repository.GetFiltersData(cancellationToken);
 
-                // Construir a resposta  
                 var response = new GetAllProductsResponse
                 {
-                    Products = products.Select(p => new ProductListItemDto
+                    Products = products.Select(static p => new ProductListItemDto
                     {
                         Id = p.Id,
                         Name = p.Name,
@@ -43,20 +41,27 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                         StockQuantity = p.StockQuantity,
                         ImageUrl = p.ImageUrl,
                         IsActive = p.IsActive,
-                        Categories = p.ProductCategories.Select(pc => pc.Category.Name).ToList(),
-                        Attributes = p.Attributes.Select(a => new ProductAttributeDto
-                        {
-                            Key = a.Key,
-                            Value = a.Value
-                        }).ToList()
+                        Categories = p.ProductCategories?
+                            .Select(pc => pc.Category?.Name)
+                            .Where(name => !string.IsNullOrWhiteSpace(name))
+                            .ToList() ?? new List<string>(),
+
+                        Attributes = p.Attributes?
+                            .Select(a => new ProductAttributeDto
+                            {
+                                Key = a.Key,
+                                Value = a.Value
+                            }).ToList() ?? new List<ProductAttributeDto>()
                     }).ToList(),
+
                     Pagination = new PaginationDto
                     {
-                        CurrentPage = (int)query.Filter.Page,
-                        PageSize = query.Filter.PageSize,
+                        CurrentPage = query.Filter.Page ?? 1,
+                        PageSize = pageSize,
                         TotalItems = totalCount,
                         TotalPages = pageCount
                     },
+
                     Filters = filtersData
                 };
 
@@ -66,9 +71,10 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
             }
             catch (Exception ex)
             {
-                result.WithError($"Error retrieving products: {ex.Message}");
+                result.WithError($"Erro ao buscar produtos: {ex.Message}");
                 return result;
             }
         }
+
     }
 }

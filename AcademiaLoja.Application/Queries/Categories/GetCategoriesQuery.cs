@@ -7,11 +7,11 @@ namespace AcademiaLoja.Application.Queries.Categories
 {
     public class GetCategoriesQuery : IRequest<Result<IEnumerable<CategoryResponse>>>
     {
-        public GetCategoriesRequestFilter filter;
+        public GetCategoriesRequestFilter Filter;
 
         public GetCategoriesQuery(GetCategoriesRequestFilter filter)
         {
-            this.filter = filter;
+            Filter = filter;
         }
     }
 }
