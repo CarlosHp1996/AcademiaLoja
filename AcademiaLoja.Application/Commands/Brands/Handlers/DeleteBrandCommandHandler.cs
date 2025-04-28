@@ -30,9 +30,9 @@ namespace AcademiaLoja.Application.Commands.Brands.Handlers
                 result.Message = "Marca excluída com sucesso!";
                 return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception("Ocorreu um erro ao manipular o DeleteBrandCommand.", ex);
             }
         }
     }

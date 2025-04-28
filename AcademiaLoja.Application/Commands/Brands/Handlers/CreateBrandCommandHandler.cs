@@ -38,9 +38,9 @@ namespace AcademiaLoja.Application.Commands.Brands.Handlers
                 result.Count = 1;
                 result.HasSuccess = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception("Ocorreu um erro ao manipular o CreateBrandCommand.", ex);
             }
 
             return result;

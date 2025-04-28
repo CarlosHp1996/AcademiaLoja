@@ -1,15 +1,7 @@
 ﻿using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Models.Responses.Brands;
-using AcademiaLoja.Application.Models.Responses.Categories;
 using AcademiaLoja.Domain.Helpers;
-using AutoMapper;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace AcademiaLoja.Application.Queries.Brands.Handlers
 {

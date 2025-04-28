@@ -17,5 +17,7 @@
         public virtual ICollection<OrderItem> OrderItems { get;  set; } = new List<OrderItem>();
         public virtual ICollection<ProductAttribute> Attributes { get;  set; } = new List<ProductAttribute>();
         public virtual Inventory Inventory { get;  set; }
+        public virtual ICollection<ProductBrand> ProductBrands { get; set; } = new List<ProductBrand>();
+        public virtual ICollection<ProductObjective> ProductObjectives { get; private set; } = new List<ProductObjective>();
     }
 }

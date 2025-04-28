@@ -1,6 +1,6 @@
 ﻿namespace AcademiaLoja.Application.Models.Filters
 {
-    public class GetBrandsRequestFilter : BaseRequestFilter
+    public class GetObjectivesRequestFilter : BaseRequestFilter
     {
         public string? Name { get; set; }
         public string? Description { get; set; }

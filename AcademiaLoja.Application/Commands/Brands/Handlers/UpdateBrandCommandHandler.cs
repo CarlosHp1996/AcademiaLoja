@@ -36,7 +36,7 @@ namespace AcademiaLoja.Application.Commands.Brands.Handlers
                     return result;
                 }
 
-                var response = new BrandResponse()
+                var response = new BrandResponse
                 {
                     Id = brand.Id,
                     Name = brand.Name,
@@ -46,10 +46,11 @@ namespace AcademiaLoja.Application.Commands.Brands.Handlers
                 result.Value = response;
                 result.Count = 1;
                 result.HasSuccess = true;
+                result.Message = "Marca atualizada com sucesso";
             }
             catch (Exception ex)
             {
-                result.WithError(ex.Message);
+                throw new Exception("Ocorreu um erro ao manipular o UpdateBrandCommand.", ex);
             }
 
             return result;
