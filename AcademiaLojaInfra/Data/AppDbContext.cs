@@ -22,6 +22,8 @@ namespace AcademiaLoja.Infra.Data
         public DbSet<CategorySubCategory> CategorySubCategories { get; set; }
         public DbSet<Brand> Brands { get; set; }
         public DbSet<ProductBrand> ProductBrands { get; set; }
+        public DbSet<Objective> Objectives { get; set; }
+        public DbSet<ProductObjective> ProductObjectives { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -274,6 +276,32 @@ namespace AcademiaLoja.Infra.Data
             {
                 entity.ToTable("ProductBrands");
                 entity.HasKey(pc => new { pc.ProductId, pc.BrandId });
+            });
+
+            // Configuração de Objective
+            modelBuilder.Entity<Objective>(entity =>
+            {
+                entity.ToTable("Objectives");
+                entity.HasKey(c => c.Id);
+
+                entity.Property(c => c.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(c => c.Description)
+                    .HasMaxLength(500);
+
+                // Relacionamentos
+                entity.HasMany(c => c.ProductObjectives)
+                    .WithOne(pc => pc.Objective)
+                    .HasForeignKey(pc => pc.ObjectiveId);
+            });
+
+            // Configuração de ProductObjective
+            modelBuilder.Entity<ProductObjective>(entity =>
+            {
+                entity.ToTable("ProductObjectives");
+                entity.HasKey(pc => new { pc.ProductId, pc.ObjectiveId });
             });
         }
     }

@@ -290,6 +290,18 @@ namespace AcademiaLoja.Infra.Repositories
                     brands.Add(brand);
                 }
 
+                // Verificar se todas os objetivos existem
+                var objectives = new List<Objective>();
+                foreach (var objectiveId in request.ObjectivesId)
+                {
+                    var objective = await _context.Objectives.FindAsync(objectiveId);
+
+                    if (objective == null)
+                        throw new Exception($"Objective with ID {objectiveId} not found.");
+
+                    objectives.Add(objective);
+                }
+
                 // Criar o produto
                 var now = DateTime.UtcNow;
                 var product = new Product
@@ -342,6 +354,19 @@ namespace AcademiaLoja.Infra.Repositories
                     };
                     _context.ProductBrands.Add(productBrand);
                     productBrands.Add(productBrand);
+                }
+
+                // Associar objetivos ao produto
+                var productObjectives = new List<ProductObjective>();
+                foreach (var objective in objectives)
+                {
+                    var productObjective = new ProductObjective
+                    {
+                        ProductId = product.Id,
+                        ObjectiveId = objective.Id
+                    };
+                    _context.ProductObjectives.Add(productObjective);
+                    productObjectives.Add(productObjective);
                 }
 
                 // Adicionar atributos do produto

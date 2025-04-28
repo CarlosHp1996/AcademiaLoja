@@ -45,7 +45,14 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                             .Select(pc => pc.Category?.Name)
                             .Where(name => !string.IsNullOrWhiteSpace(name))
                             .ToList() ?? new List<string>(),
-
+                        Brands = p.ProductBrands ?
+                            .Select(pb => pb.Brand?.Name)
+                            .Where(name => !string.IsNullOrWhiteSpace(name))
+                            .ToList() ?? new List<string>(),
+                        Objectives = p.ProductObjectives?
+                            .Select(po => po.Objective?.Name)
+                            .Where(name => !string.IsNullOrWhiteSpace(name))
+                            .ToList() ?? new List<string>(),
                         Attributes = p.Attributes?
                             .Select(a => new ProductAttributeDto
                             {
