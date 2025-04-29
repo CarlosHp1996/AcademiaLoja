@@ -1,0 +1,28 @@
+using System;
+using System.Collections.Generic;
+
+namespace CrudGenerator.Models
+{
+    public class Create{EntityName}Request
+    {
+        // Propriedades serão geradas dinamicamente com base nas propriedades da entidade
+    }
+
+    public class Update{EntityName}Request
+    {
+        // Propriedades serão geradas dinamicamente com base nas propriedades da entidade
+    }
+
+    public class {EntityName}Response
+    {
+        public Guid Id { get; set; }
+        // Outras propriedades serão geradas dinamicamente com base nas propriedades da entidade
+    }
+
+    public class Get{EntityName}sRequestFilter
+    {
+        public string Search { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
+}

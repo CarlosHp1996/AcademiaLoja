@@ -10,6 +10,8 @@ using System.Text;
 using AcademiaLoja.Domain.Security;
 using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Infra.Repositories;
+using CrudGenerator.Services;
+using CrudGenerator;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,9 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<IObjectiveRepository, ObjectiveRepository>();
+builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
+builder.Services.AddScoped<ITemplateService, TemplateService>();
+builder.Services.AddSingleton<IFileSystemService, FileSystemService>();
 
 // Add Cors (chamada do frontend)
 builder.Services.AddCors(options =>
@@ -42,6 +47,15 @@ builder.Services.AddCors(options =>
 
 // Add MediatR to the services
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+
+// Configurar logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+// Registrar serviços usando a extensão
+builder.Services.AddCrudGenerator();
 
 // Enabling the use of ASP.NET Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
