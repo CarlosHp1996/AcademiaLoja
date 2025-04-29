@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -33,6 +33,7 @@
     <ProjectReference Include="..\AcademiaLoja.Application\AcademiaLoja.Application.csproj" />
     <ProjectReference Include="..\AcademiaLoja.Domain\AcademiaLoja.Domain.csproj" />
     <ProjectReference Include="..\AcademiaLojaInfra\AcademiaLoja.Infra.csproj" />
+    <ProjectReference Include="..\CrudGenerator\CrudGenerator.csproj" />
   </ItemGroup>
 
 </Project>

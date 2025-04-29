@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AcademiaLoja.Infra", "Acade
 		{2CD6EF1A-95E2-42D8-9DF1-526032CC84F0} = {2CD6EF1A-95E2-42D8-9DF1-526032CC84F0}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrudGenerator", "CrudGenerator\CrudGenerator.csproj", "{E75C56DC-DD07-40A7-BE2D-FA51AE89CB61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{93C719DA-F397-489F-8C99-71E0C45A272A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93C719DA-F397-489F-8C99-71E0C45A272A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93C719DA-F397-489F-8C99-71E0C45A272A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E75C56DC-DD07-40A7-BE2D-FA51AE89CB61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E75C56DC-DD07-40A7-BE2D-FA51AE89CB61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E75C56DC-DD07-40A7-BE2D-FA51AE89CB61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E75C56DC-DD07-40A7-BE2D-FA51AE89CB61}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
