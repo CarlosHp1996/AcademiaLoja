@@ -24,6 +24,7 @@ namespace AcademiaLoja.Infra.Data
         public DbSet<ProductBrand> ProductBrands { get; set; }
         public DbSet<Objective> Objectives { get; set; }
         public DbSet<ProductObjective> ProductObjectives { get; set; }
+        public DbSet<Accessory> Accessories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -302,6 +303,23 @@ namespace AcademiaLoja.Infra.Data
             {
                 entity.ToTable("ProductObjectives");
                 entity.HasKey(pc => new { pc.ProductId, pc.ObjectiveId });
+            });
+
+            // Configuração de Accessories
+            modelBuilder.Entity<Accessory>(entity =>
+            {
+                entity.ToTable("Accessories");
+                entity.HasKey(c => c.Id);
+
+                entity.Property(c => c.Name)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    ;
+
+                entity.Property(c => c.Description)
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    ;
             });
         }
     }
