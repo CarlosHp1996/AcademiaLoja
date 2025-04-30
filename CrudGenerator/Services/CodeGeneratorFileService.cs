@@ -418,9 +418,6 @@ namespace CrudGenerator.Services
             sb.AppendLine("{");
             sb.AppendLine($"    public class Get{request.EntityName}sRequestFilter : BaseRequestFilter");
             sb.AppendLine("    {");
-            //sb.AppendLine("        public string Search { get; set; }");
-            sb.AppendLine("        public int Page { get; set; } = 1;");
-            sb.AppendLine("        public int PageSize { get; set; } = 10;");
             sb.AppendLine("    }");
             sb.AppendLine("}");
             
