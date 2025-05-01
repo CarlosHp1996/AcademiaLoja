@@ -14,14 +14,14 @@ namespace AcademiaLoja.Application.Commands.Products.Handlers
             _productRepository = productRepository;
         }
 
-        public async Task<Result<CreateProductResponse>> Handle(CreateProductCommand command, CancellationToken cancellationToken)
+        public async Task<Result<CreateProductResponse>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
         {
             var result = new Result<CreateProductResponse>();
 
             try
             {
                 // Delegar toda a lógica de criação para o repositório
-                var response = await _productRepository.CreateProduct(command.Request, cancellationToken);
+                var response = await _productRepository.CreateProduct(request.Request, cancellationToken);
 
                 result.Value = response;
                 result.Count = 1;
