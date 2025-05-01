@@ -14,62 +14,32 @@ namespace AcademiaLoja.Application.Commands.Categories.Handlers
             _categoryRepository = categoryRepository;
         }
         public async Task<Result<CategoryResponse>> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
-        {            
+        {
+            var result = new Result<CategoryResponse>();
+
             try
             {
-                var result = new Result<CategoryResponse>();
+                // Verificar se a categoria existe
                 var category = await _categoryRepository.GetById(request.Id);
 
-                if (category is null)
+                if (category == null)
                 {
-                    result.WithError("Categoria não encontrada.");
+                    result.WithError("Category not found.");
                     return result;
                 }
 
-                //CRIAR UM UPDATE CATEGORY NO CATEGORYREPOSITORY E ADD: (IGUAL EM UPDATEPRODUCT)
-                // Associar subcategorias à categoria
-                //var productCategories = new List<ProductCategory>();
-                //foreach (var category in categories)
-                //{
-                //    var productCategory = new ProductCategory
-                //    {
-                //        ProductId = product.Id,
-                //        CategoryId = category.Id
-                //    };
-                //    _context.ProductCategories.Add(productCategory);
-                //    productCategories.Add(productCategory);
-                //}
+                // Delegar toda a lógica de atualização para o repositório
+                var response = await _categoryRepository.UpdateCategory(category, request.Request, cancellationToken);
 
-                category.Id = request.Id;
-                category.Name = request.Request.Name;
-                category.Description = request.Request.Description;
-                var update = await _categoryRepository.UpdateAsync(category);
-
-                if (!update)
-                {
-                    result.WithError("Erro ao atualizar a categoria.");
-                    return result;
-                }
-
-                var response = new CategoryResponse()
-                {
-                    Id = category.Id,
-                    Name = category.Name,
-                    Description = category.Description
-                };
-
-                result.Count = 1;
-                result.Message = "Categoria alterada com sucesso!";
-                result.HasSuccess = true;
                 result.Value = response;
+                result.HasSuccess = true;
                 return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
-            }          
-
+                result.WithError($"Error updating category: {ex.Message}");
+                return result;
+            }
         }
     }
 }

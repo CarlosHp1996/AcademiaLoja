@@ -25,7 +25,6 @@ namespace AcademiaLoja.Application.Models.Requests.Products
         [Required]
         public bool IsActive { get; set; } = true;
 
-        [Required]
         public List<Guid> CategoryIds { get; set; } = new List<Guid>();
 
         // Atributos do produto (sabor, marca, etc.)

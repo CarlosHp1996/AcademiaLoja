@@ -3,7 +3,7 @@ using AcademiaLoja.Application.Models.Filters;
 using AcademiaLoja.Application.Models.Requests.Accessoriess;
 using AcademiaLoja.Application.Models.Requests.Acessory;
 using AcademiaLoja.Application.Models.Responses.Acessory;
-using AcademiaLoja.Application.Queries.Accessoriess;
+using AcademiaLoja.Application.Queries.Accessories;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

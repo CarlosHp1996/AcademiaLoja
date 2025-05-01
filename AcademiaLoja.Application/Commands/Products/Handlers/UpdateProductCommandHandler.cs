@@ -14,14 +14,14 @@ namespace AcademiaLoja.Application.Commands.Products.Handlers
             _productRepository = productRepository;
         }
 
-        public async Task<Result<UpdateProductResponse>> Handle(UpdateProductCommand command, CancellationToken cancellationToken)
+        public async Task<Result<UpdateProductResponse>> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
             var result = new Result<UpdateProductResponse>();
 
             try
             {
                 // Verificar se o produto existe
-                var product = await _productRepository.GetById(command.Id);
+                var product = await _productRepository.GetById(request.Id);
 
                 if (product == null)
                 {
@@ -30,7 +30,7 @@ namespace AcademiaLoja.Application.Commands.Products.Handlers
                 }
 
                 // Delegar toda a lógica de atualização para o repositório
-                var response = await _productRepository.UpdateProduct(product, command.Request, cancellationToken);
+                var response = await _productRepository.UpdateProduct(product, request.Request, cancellationToken);
 
                 result.Value = response;
                 result.HasSuccess = true;
