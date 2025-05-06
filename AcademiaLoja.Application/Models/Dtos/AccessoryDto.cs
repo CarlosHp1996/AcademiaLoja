@@ -1,8 +1,8 @@
-using AcademiaLoja.Domain.Enums;
+ï»¿using AcademiaLoja.Domain.Enums;
 
-namespace AcademiaLoja.Domain.Entities
+namespace AcademiaLoja.Application.Models.Dtos
 {
-    public class Accessory
+    public class AccessoryDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
@@ -10,8 +10,5 @@ namespace AcademiaLoja.Domain.Entities
         public EnumColor Color { get; set; }
         public EnumModel Model { get; set; }
         public EnumSize Size { get; set; }
-
-        // Navegação
-        public virtual ICollection<ProductAccessory> ProductAccessories { get; set; } = new List<ProductAccessory>();
     }
 }

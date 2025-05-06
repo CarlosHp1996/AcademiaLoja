@@ -16,6 +16,7 @@ namespace AcademiaLoja.Application.Models.Responses.Products
         public List<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
         public List<BrandDto> Brands { get; set; } = new List<BrandDto>();
         public List<ProductAttributeDto> Attributes { get; set; } = new List<ProductAttributeDto>();
+        public List<AccessoryDto> Accessories { get; set; } = new List<AccessoryDto>();
         public string Message { get; set; }
     }   
 }

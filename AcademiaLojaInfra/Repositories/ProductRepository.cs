@@ -6,7 +6,9 @@ using AcademiaLoja.Application.Models.Responses.Products;
 using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Domain.Helpers;
 using AcademiaLoja.Infra.Data;
+using AcademiaLoja.Infra.Migrations;
 using Microsoft.EntityFrameworkCore;
+using ProductAccessory = AcademiaLoja.Domain.Entities.ProductAccessory;
 
 namespace AcademiaLoja.Infra.Repositories
 {
@@ -33,6 +35,12 @@ namespace AcademiaLoja.Infra.Repositories
                 .Include(x => x.ProductCategories)
                     .ThenInclude(pc => pc.Category)
                 .Include(x => x.Attributes)
+                .Include(x => x.ProductBrands)
+                    .ThenInclude(pb => pb.Brand)
+                .Include(x => x.ProductObjectives)
+                    .ThenInclude(po => po.Objective)
+                .Include(x => x.ProductAccessories)
+                    .ThenInclude(pa => pa.Accessory)
                 .AsQueryable();
 
             // Aplicando os filtros
@@ -42,13 +50,19 @@ namespace AcademiaLoja.Infra.Repositories
             if (filter.CategoryIds != null && filter.CategoryIds.Any())
                 query = query.Where(p => p.ProductCategories.Any(pc => filter.CategoryIds.Contains(pc.CategoryId)));
 
+            if (filter.ObjectiveIds != null && filter.ObjectiveIds.Any())
+                query = query.Where(p => p.ProductObjectives.Any(po => filter.ObjectiveIds.Contains(po.ObjectiveId.ToString())));
+
+            if (filter.AccessoryIds != null && filter.AccessoryIds.Any())
+                query = query.Where(p => p.ProductAccessories.Any(pa => filter.AccessoryIds.Contains(pa.AccessoryId.ToString())));
+
             if (filter.Flavors != null && filter.Flavors.Any())
                 query = query.Where(p => p.Attributes.Any(a =>
                     a.Key.ToLower() == "sabor" && filter.Flavors.Contains(a.Value)));
 
-            if (filter.Brands != null && filter.Brands.Any())
+            if (filter.BrandIds != null && filter.BrandIds.Any())
                 query = query.Where(p => p.Attributes.Any(a =>
-                    a.Key.ToLower() == "marca" && filter.Brands.Contains(a.Value)));
+                    a.Key.ToLower() == "marca" && filter.BrandIds.Contains(a.Value)));
 
             if (filter.QuantityRanges != null && filter.QuantityRanges.Any())
             {
@@ -279,7 +293,7 @@ namespace AcademiaLoja.Infra.Repositories
                 }
 
                 // Verificar se todas as marcas existem
-                var brands = new List<Brand>();
+                var brands = new List<Domain.Entities.Brand>();
                 foreach (var brandId in request.BrandIds)
                 {
                     var brand = await _context.Brands.FindAsync(brandId);
@@ -291,8 +305,8 @@ namespace AcademiaLoja.Infra.Repositories
                 }
 
                 // Verificar se todas os objetivos existem
-                var objectives = new List<Objective>();
-                foreach (var objectiveId in request.ObjectivesId)
+                var objectives = new List<Domain.Entities.Objective>();
+                foreach (var objectiveId in request.ObjectivesIds)
                 {
                     var objective = await _context.Objectives.FindAsync(objectiveId);
 
@@ -300,6 +314,18 @@ namespace AcademiaLoja.Infra.Repositories
                         throw new Exception($"Objective with ID {objectiveId} not found.");
 
                     objectives.Add(objective);
+                }
+
+                // Verificar se todos os acessórios existem
+                var accessories = new List<Accessory>();
+                foreach (var accessoryId in request.AccessoryIds)
+                {
+                    var accessory = await _context.Accessories.FindAsync(accessoryId);
+                    if (accessory == null)
+                    {
+                        throw new Exception($"Accessory with ID {accessoryId} not found.");
+                    }
+                    accessories.Add(accessory);
                 }
 
                 // Criar o produto
@@ -369,6 +395,19 @@ namespace AcademiaLoja.Infra.Repositories
                     productObjectives.Add(productObjective);
                 }
 
+                // Associar acessórios ao produto
+                var productAccessories = new List<ProductAccessory>();
+                foreach (var accessory in accessories)
+                {
+                    var productAccessory = new ProductAccessory
+                    {
+                        ProductId = product.Id,
+                        AccessoryId = accessory.Id,
+                    };
+                    _context.ProductAccessories.Add(productAccessory);
+                    productAccessories.Add(productAccessory);
+                }
+
                 // Adicionar atributos do produto
                 var productAttributes = new List<ProductAttribute>();
                 foreach (var attr in request.Attributes)
@@ -416,6 +455,12 @@ namespace AcademiaLoja.Infra.Repositories
                         Id = a.Id,
                         Key = a.Key,
                         Value = a.Value
+                    }).ToList(),
+                    Accessories = accessories.Select(a => new AccessoryDto
+                    {
+                        Id = a.Id,
+                        Name = a.Name,
+                        Description = a.Description
                     }).ToList(),
                     Message = "Product created successfully."
                 };

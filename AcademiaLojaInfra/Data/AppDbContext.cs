@@ -25,6 +25,7 @@ namespace AcademiaLoja.Infra.Data
         public DbSet<Objective> Objectives { get; set; }
         public DbSet<ProductObjective> ProductObjectives { get; set; }
         public DbSet<Accessory> Accessories { get; set; }
+        public DbSet<ProductAccessory> ProductAccessories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -227,7 +228,7 @@ namespace AcademiaLoja.Infra.Data
                     .IsRequired();
             });
 
-            // Configuração de SucCategory
+            // Configuração de SubCategory
             modelBuilder.Entity<SubCategory>(entity =>
             {
                 entity.ToTable("SubCategories");
@@ -269,7 +270,7 @@ namespace AcademiaLoja.Infra.Data
                 // Relacionamentos
                 entity.HasMany(c => c.ProductBrands)
                     .WithOne(pc => pc.Brand)
-                    .HasForeignKey(pc => pc.BrandId);
+                    .HasForeignKey(pc => pc.BrandId);                
             });
 
             // Configuração de ProductBrand
@@ -313,13 +314,23 @@ namespace AcademiaLoja.Infra.Data
 
                 entity.Property(c => c.Name)
                     .IsRequired()
-                    .HasMaxLength(50)
-                    ;
+                    .HasMaxLength(50);
 
                 entity.Property(c => c.Description)
                     .IsRequired()
-                    .HasMaxLength(500)
-                    ;
+                    .HasMaxLength(500);
+
+                // Relacionamentos
+                entity.HasMany(c => c.ProductAccessories)
+                    .WithOne(pc => pc.Accessory)
+                    .HasForeignKey(pc => pc.AccessoryId);
+            });
+
+            // Configuração de ProductObjective
+            modelBuilder.Entity<ProductAccessory>(entity =>
+            {
+                entity.ToTable("ProductAccessories");
+                entity.HasKey(pc => new { pc.ProductId, pc.AccessoryId });
             });
         }
     }

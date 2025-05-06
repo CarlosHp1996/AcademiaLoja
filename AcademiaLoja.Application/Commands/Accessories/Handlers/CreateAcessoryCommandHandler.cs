@@ -1,6 +1,5 @@
 using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Models.Responses.Acessory;
-using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
 
@@ -19,31 +18,19 @@ namespace AcademiaLoja.Application.Commands.Acessory.Handlers
 
             try
             {
-                var accessories = new Accessory()
-                {
-                    Name = request.Request.Name,
-                    Description = request.Request.Description,
-                };
-
-                _ = await _accessoriesRepository.AddAsync(accessories);
-
-                var response = new AccessoryResponse
-                {
-                    Id = accessories.Id,
-                    Name = accessories.Name,
-                    Description = accessories.Description,
-                };
+                // Delegar toda a lógica de criação para o repositório
+                var response = await _accessoriesRepository.CreateAccessory(request.Request, cancellationToken);
 
                 result.Value = response;
                 result.Count = 1;
                 result.HasSuccess = true;
+                return result;
             }
             catch (Exception ex)
             {
-                throw new Exception("Ocorreu um erro ao manipular o CreateAcessoryCommand.", ex);
+                result.WithError($"Error creating accessory: {ex.Message}");
+                return result;
             }
-
-            return result;
         }
     }
 }

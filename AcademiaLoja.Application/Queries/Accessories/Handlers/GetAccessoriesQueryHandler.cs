@@ -1,4 +1,5 @@
 using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Application.Models.Dtos;
 using AcademiaLoja.Application.Models.Responses.Acessory;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
@@ -18,7 +19,7 @@ namespace AcademiaLoja.Application.Queries.Accessories.Handlers
 
             try
             {
-                var accessoriess = await _accessoriesRepository.GetAll(query.Filter.Take, query.Filter.Offset, query.Filter.SortingProp, query.Filter.Ascending);
+                var accessoriess = await _accessoriesRepository.Get(query.Filter);
 
                 // Aplicar filtros se necessário
                 if (!accessoriess.Result(out var count).Any())
@@ -29,7 +30,6 @@ namespace AcademiaLoja.Application.Queries.Accessories.Handlers
 
                 // Paginação
                 var pagedItems = accessoriess.Result(out count);
-
                 var response = new List<AccessoryResponse>();
 
                 foreach (var accessories in pagedItems)
@@ -39,6 +39,9 @@ namespace AcademiaLoja.Application.Queries.Accessories.Handlers
                     Id = accessories.Id,
                     Name = accessories.Name,
                     Description = accessories.Description,
+                    Color = accessories.Color,
+                    Model = accessories.Model,
+                    Size = accessories.Size                    
                 };
                 response.Add(responseItem);
                 }

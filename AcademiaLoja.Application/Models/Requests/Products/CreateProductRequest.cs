@@ -34,6 +34,9 @@ namespace AcademiaLoja.Application.Models.Requests.Products
         public List<Guid> BrandIds { get; set; } = new List<Guid>();
 
         [Required]
-        public List<Guid> ObjectivesId { get; set; } = new List<Guid>();
+        public List<Guid> ObjectivesIds { get; set; } = new List<Guid>();
+
+        [Required]
+        public List<Guid> AccessoryIds { get; set; } = new List<Guid>();
     }
 }

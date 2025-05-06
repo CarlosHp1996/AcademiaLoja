@@ -23,7 +23,7 @@ namespace AcademiaLoja.Application.Commands.Acessory.Handlers
                 if (accessories == null)
                 {
                     result.HasSuccess = false;
-                    result.Message = "Accessories não encontrado.";
+                    result.WithError("Accessório não encontrado.");
                     return result;
                 }
 
