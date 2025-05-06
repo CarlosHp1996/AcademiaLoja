@@ -32,6 +32,9 @@ namespace AcademiaLoja.Application.Queries.Accessories.Handlers
                     Id = accessories.Id,
                     Name = accessories.Name,
                     Description = accessories.Description,
+                    Color = accessories.Color,
+                    Model = accessories.Model,
+                    Size = accessories.Size
                 };
 
                 result.Value = response;

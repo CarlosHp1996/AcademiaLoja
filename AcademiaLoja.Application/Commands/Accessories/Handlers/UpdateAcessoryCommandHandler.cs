@@ -28,8 +28,11 @@ namespace AcademiaLoja.Application.Commands.Acessory.Handlers
                 }
 
                 accessories.Id = request.Id;
-                accessories.Name = request.Request.Name;
-                accessories.Description = request.Request.Description;
+                accessories.Name = request.Request.Name ?? accessories.Name;
+                accessories.Description = request.Request.Description ?? accessories.Description;
+                accessories.Color = request.Request.Color ?? accessories.Color;
+                accessories.Model = request.Request.Model ?? accessories.Model;
+                accessories.Size = request.Request.Size ?? accessories.Size;
 
                 _ = await _accessoriesRepository.UpdateAsync(accessories);
 
@@ -38,6 +41,9 @@ namespace AcademiaLoja.Application.Commands.Acessory.Handlers
                     Id = accessories.Id,
                     Name = accessories.Name,
                     Description = accessories.Description,
+                    Color = accessories.Color,
+                    Model = accessories.Model,
+                    Size = accessories.Size
                 };
 
                 result.Value = response;

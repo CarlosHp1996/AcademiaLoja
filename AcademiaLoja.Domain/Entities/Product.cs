@@ -19,5 +19,6 @@
         public virtual Inventory Inventory { get;  set; }
         public virtual ICollection<ProductBrand> ProductBrands { get; set; } = new List<ProductBrand>();
         public virtual ICollection<ProductObjective> ProductObjectives { get; private set; } = new List<ProductObjective>();
+        public virtual ICollection<ProductAccessory> ProductAccessories { get; private set; } = new List<ProductAccessory>();
     }
 }

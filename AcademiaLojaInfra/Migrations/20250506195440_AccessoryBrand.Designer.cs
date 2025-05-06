@@ -4,6 +4,7 @@ using AcademiaLoja.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AcademiaLoja.Infra.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250506195440_AccessoryBrand")]
+    partial class AccessoryBrand
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,12 +47,30 @@ namespace AcademiaLoja.Infra.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("Size")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.ToTable("Accessories", (string)null);
+                });
+
+            modelBuilder.Entity("AcademiaLoja.Domain.Entities.AccessoryBrand", b =>
+                {
+                    b.Property<Guid>("AccessoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BrandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AccessoryId", "BrandId");
+
+                    b.HasIndex("BrandId");
+
+                    b.ToTable("AccessoryBrands", (string)null);
                 });
 
             modelBuilder.Entity("AcademiaLoja.Domain.Entities.Brand", b =>
@@ -300,21 +321,6 @@ namespace AcademiaLoja.Infra.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Products", (string)null);
-                });
-
-            modelBuilder.Entity("AcademiaLoja.Domain.Entities.ProductAccessory", b =>
-                {
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AccessoryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("ProductId", "AccessoryId");
-
-                    b.HasIndex("AccessoryId");
-
-                    b.ToTable("ProductAccessories", (string)null);
                 });
 
             modelBuilder.Entity("AcademiaLoja.Domain.Entities.ProductAttribute", b =>
@@ -606,6 +612,25 @@ namespace AcademiaLoja.Infra.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AcademiaLoja.Domain.Entities.AccessoryBrand", b =>
+                {
+                    b.HasOne("AcademiaLoja.Domain.Entities.Accessory", "Accessory")
+                        .WithMany("AccessoryBrands")
+                        .HasForeignKey("AccessoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AcademiaLoja.Domain.Entities.Brand", "Brand")
+                        .WithMany("AccessoryBrands")
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Accessory");
+
+                    b.Navigation("Brand");
+                });
+
             modelBuilder.Entity("AcademiaLoja.Domain.Entities.CategorySubCategory", b =>
                 {
                     b.HasOne("AcademiaLoja.Domain.Entities.Category", "Category")
@@ -675,25 +700,6 @@ namespace AcademiaLoja.Infra.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("AcademiaLoja.Domain.Entities.ProductAccessory", b =>
-                {
-                    b.HasOne("AcademiaLoja.Domain.Entities.Accessory", "Accessory")
-                        .WithMany("ProductAccessories")
-                        .HasForeignKey("AccessoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AcademiaLoja.Domain.Entities.Product", "Product")
-                        .WithMany("ProductAccessories")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Accessory");
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("AcademiaLoja.Domain.Entities.ProductAttribute", b =>
@@ -817,11 +823,13 @@ namespace AcademiaLoja.Infra.Migrations
 
             modelBuilder.Entity("AcademiaLoja.Domain.Entities.Accessory", b =>
                 {
-                    b.Navigation("ProductAccessories");
+                    b.Navigation("AccessoryBrands");
                 });
 
             modelBuilder.Entity("AcademiaLoja.Domain.Entities.Brand", b =>
                 {
+                    b.Navigation("AccessoryBrands");
+
                     b.Navigation("ProductBrands");
                 });
 
@@ -852,8 +860,6 @@ namespace AcademiaLoja.Infra.Migrations
                         .IsRequired();
 
                     b.Navigation("OrderItems");
-
-                    b.Navigation("ProductAccessories");
 
                     b.Navigation("ProductBrands");
 
