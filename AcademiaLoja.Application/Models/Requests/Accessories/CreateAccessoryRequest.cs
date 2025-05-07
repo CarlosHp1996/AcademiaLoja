@@ -14,7 +14,6 @@ namespace AcademiaLoja.Application.Models.Requests.Accessoriess
         public EnumSize Size { get; set; }
 
         [Range(0.01, double.MaxValue, ErrorMessage = "O preço deve ser maior que zero.")]
-        public decimal Price { get; set; }
         public List<Guid> BrandIds { get; set; } = new List<Guid>();
 
     }
