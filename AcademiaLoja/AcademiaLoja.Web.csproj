@@ -36,4 +36,16 @@
     <ProjectReference Include="..\CrudGenerator\CrudGenerator.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Generated\AcademiaLoja\Application\Interfaces\" />
+    <Folder Include="Generated\AcademiaLoja\Application\Models\Filters\" />
+    <Folder Include="Generated\AcademiaLoja\Application\Models\Requests\" />
+    <Folder Include="Generated\AcademiaLoja\Application\Models\Responses\" />
+    <Folder Include="Generated\AcademiaLoja\Application\Queries\" />
+    <Folder Include="Generated\AcademiaLoja\Domain\Entities\" />
+    <Folder Include="Generated\AcademiaLoja\Infra\Data\Configuration\" />
+    <Folder Include="Generated\AcademiaLoja\Infra\Repositories\" />
+    <Folder Include="Generated\AcademiaLoja\Web\Controllers\" />
+  </ItemGroup>
+
 </Project>

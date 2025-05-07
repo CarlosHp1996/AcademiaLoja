@@ -12,7 +12,6 @@ namespace AcademiaLoja.Application.Models.Responses.Acessory
         public EnumColor Color { get; set; }
         public EnumModel Model { get; set; }
         public EnumSize Size { get; set; }
-        public decimal Price { get; set; }
         public string Message { get; set; } = string.Empty;
     }
 }

@@ -1,11 +1,10 @@
-﻿using AcademiaLoja.Domain.Entities.Security;
-
-namespace AcademiaLoja.Domain.Entities
+﻿namespace AcademiaLoja.Application.Models.Dtos
 {
-    public class Order
+    public class OrderDto
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
+        public string UserName { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
         public string PaymentStatus { get; set; }
@@ -13,10 +12,7 @@ namespace AcademiaLoja.Domain.Entities
         public string ShippingAddress { get; set; }
         public DateTime OrderDate { get; set; }
         public DateTime UpdatedAt { get; set; }
-
-        // Navegação
-        public virtual ApplicationUser User { get; set; }
-        public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        public List<OrderItemDto> Items { get; set; } = new List<OrderItemDto>();
+        public List<PaymentDto> Payments { get; set; } = new List<PaymentDto>();
     }
 }
