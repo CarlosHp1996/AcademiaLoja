@@ -40,23 +40,7 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                         Price = p.Price,
                         StockQuantity = p.StockQuantity,
                         ImageUrl = p.ImageUrl,
-                        IsActive = p.IsActive,
-                        Categories = p.ProductCategories?
-                            .Select(pc => pc.Category?.Name)
-                            .Where(name => !string.IsNullOrWhiteSpace(name))
-                            .ToList() ?? new List<string>(),
-                        Brands = p.ProductBrands ?
-                            .Select(pb => pb.Brand?.Name)
-                            .Where(name => !string.IsNullOrWhiteSpace(name))
-                            .ToList() ?? new List<string>(),
-                        Objectives = p.ProductObjectives?
-                            .Select(po => po.Objective?.Name)
-                            .Where(name => !string.IsNullOrWhiteSpace(name))
-                            .ToList() ?? new List<string>(),
-                        Accessories = p.ProductAccessories ?
-                            .Select(pa => pa.Accessory?.Name)
-                            .Where(name => !string.IsNullOrWhiteSpace(name))
-                            .ToList() ?? new List<string>(),
+                        IsActive = p.IsActive,                       
                         Attributes = p.Attributes?
                             .Select(a => new ProductAttributeDto
                             {

@@ -11,21 +11,11 @@ namespace AcademiaLoja.Infra.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Product> Products { get; set; }
-        public DbSet<Category> Categories { get; set; }
-        public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
-        public DbSet<Payment> Payments { get; set; }
-        public DbSet<SubCategory> SubCategories { get; set; }
-        public DbSet<CategorySubCategory> CategorySubCategories { get; set; }
-        public DbSet<Brand> Brands { get; set; }
-        public DbSet<ProductBrand> ProductBrands { get; set; }
-        public DbSet<Objective> Objectives { get; set; }
-        public DbSet<ProductObjective> ProductObjectives { get; set; }
-        public DbSet<Accessory> Accessories { get; set; }
-        public DbSet<ProductAccessory> ProductAccessories { get; set; }
+        public DbSet<Payment> Payments { get; set; }      
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,11 +53,7 @@ namespace AcademiaLoja.Infra.Data
                 entity.Property(p => p.UpdatedAt)
                     .IsRequired();
 
-                // Relacionamentos
-                entity.HasMany(p => p.ProductCategories)
-                    .WithOne(pc => pc.Product)
-                    .HasForeignKey(pc => pc.ProductId);
-
+                // Relacionamentos               
                 entity.HasMany(p => p.OrderItems)
                     .WithOne(oi => oi.Product)
                     .HasForeignKey(oi => oi.ProductId)
@@ -80,38 +66,7 @@ namespace AcademiaLoja.Infra.Data
                 entity.HasOne(p => p.Inventory)
                     .WithOne(i => i.Product)
                     .HasForeignKey<Inventory>(i => i.ProductId);
-            });
-
-            // Configuração de Category
-            modelBuilder.Entity<Category>(entity =>
-            {
-                entity.ToTable("Categories");
-                entity.HasKey(c => c.Id);
-
-                entity.Property(c => c.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(c => c.Description)
-                    .HasMaxLength(500);
-
-                // Relacionamentos
-                entity.HasMany(c => c.ProductCategories)
-                    .WithOne(pc => pc.Category)
-                    .HasForeignKey(pc => pc.CategoryId);
-
-                // Relacionamentos
-                entity.HasMany(p => p.CategorySubCategories)
-                    .WithOne(pc => pc.Category)
-                    .HasForeignKey(pc => pc.CategoryId);
-            });
-
-            // Configuração de ProductCategory
-            modelBuilder.Entity<ProductCategory>(entity =>
-            {
-                entity.ToTable("ProductCategories");
-                entity.HasKey(pc => new { pc.ProductId, pc.CategoryId });
-            });
+            });          
 
             // Configuração de Order
             modelBuilder.Entity<Order>(entity =>
@@ -226,112 +181,7 @@ namespace AcademiaLoja.Infra.Data
 
                 entity.Property(p => p.PaymentDate)
                     .IsRequired();
-            });
-
-            // Configuração de SubCategory
-            modelBuilder.Entity<SubCategory>(entity =>
-            {
-                entity.ToTable("SubCategories");
-                entity.HasKey(c => c.Id);
-
-                entity.Property(c => c.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(c => c.Description)
-                    .HasMaxLength(500);
-
-                // Relacionamentos
-                entity.HasMany(c => c.CategorySubCategories)
-                    .WithOne(pc => pc.SubCategory)
-                    .HasForeignKey(pc => pc.SubCategoryId);
-            });
-
-            // Configuração de ProductCategory
-            modelBuilder.Entity<CategorySubCategory>(entity =>
-            {
-                entity.ToTable("CategorySubCategories");
-                entity.HasKey(pc => new { pc.CategoryId, pc.SubCategoryId });
-            });
-
-            // Configuração de Brand
-            modelBuilder.Entity<Brand>(entity =>
-            {
-                entity.ToTable("Brands");
-                entity.HasKey(c => c.Id);
-
-                entity.Property(c => c.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(c => c.Description)
-                    .HasMaxLength(500);
-
-                // Relacionamentos
-                entity.HasMany(c => c.ProductBrands)
-                    .WithOne(pc => pc.Brand)
-                    .HasForeignKey(pc => pc.BrandId);                
-            });
-
-            // Configuração de ProductBrand
-            modelBuilder.Entity<ProductBrand>(entity =>
-            {
-                entity.ToTable("ProductBrands");
-                entity.HasKey(pc => new { pc.ProductId, pc.BrandId });
-            });
-
-            // Configuração de Objective
-            modelBuilder.Entity<Objective>(entity =>
-            {
-                entity.ToTable("Objectives");
-                entity.HasKey(c => c.Id);
-
-                entity.Property(c => c.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(c => c.Description)
-                    .HasMaxLength(500);
-
-                // Relacionamentos
-                entity.HasMany(c => c.ProductObjectives)
-                    .WithOne(pc => pc.Objective)
-                    .HasForeignKey(pc => pc.ObjectiveId);
-            });
-
-            // Configuração de ProductObjective
-            modelBuilder.Entity<ProductObjective>(entity =>
-            {
-                entity.ToTable("ProductObjectives");
-                entity.HasKey(pc => new { pc.ProductId, pc.ObjectiveId });
-            });
-
-            // Configuração de Accessories
-            modelBuilder.Entity<Accessory>(entity =>
-            {
-                entity.ToTable("Accessories");
-                entity.HasKey(c => c.Id);
-
-                entity.Property(c => c.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(c => c.Description)
-                    .IsRequired()
-                    .HasMaxLength(500);
-
-                // Relacionamentos
-                entity.HasMany(c => c.ProductAccessories)
-                    .WithOne(pc => pc.Accessory)
-                    .HasForeignKey(pc => pc.AccessoryId);
-            });
-
-            // Configuração de ProductObjective
-            modelBuilder.Entity<ProductAccessory>(entity =>
-            {
-                entity.ToTable("ProductAccessories");
-                entity.HasKey(pc => new { pc.ProductId, pc.AccessoryId });
-            });
+            });          
         }
     }
 }

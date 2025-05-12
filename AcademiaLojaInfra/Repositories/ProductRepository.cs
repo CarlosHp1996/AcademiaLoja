@@ -8,7 +8,6 @@ using AcademiaLoja.Domain.Enums;
 using AcademiaLoja.Domain.Helpers;
 using AcademiaLoja.Infra.Data;
 using Microsoft.EntityFrameworkCore;
-using ProductAccessory = AcademiaLoja.Domain.Entities.ProductAccessory;
 
 namespace AcademiaLoja.Infra.Repositories
 {
@@ -32,29 +31,12 @@ namespace AcademiaLoja.Infra.Repositories
 
             // Inicializando a consulta
             var query = _context.Products
-                .Include(x => x.ProductCategories)
-                    .ThenInclude(pc => pc.Category)
-                .Include(x => x.Attributes)
-                .Include(x => x.ProductBrands)
-                    .ThenInclude(pb => pb.Brand)
-                .Include(x => x.ProductObjectives)
-                    .ThenInclude(po => po.Objective)
-                .Include(x => x.ProductAccessories)
-                    .ThenInclude(pa => pa.Accessory)
+                .Include(x => x.Attributes)                
                 .AsQueryable();
 
             // Aplicando os filtros
             if (!string.IsNullOrEmpty(filter.Name))
-                query = query.Where(p => p.Name.Contains(filter.Name));
-
-            if (filter.CategoryIds != null && filter.CategoryIds.Any())
-                query = query.Where(p => p.ProductCategories.Any(pc => filter.CategoryIds.Contains(pc.CategoryId)));
-
-            if (filter.ObjectiveIds != null && filter.ObjectiveIds.Any())
-                query = query.Where(p => p.ProductObjectives.Any(po => filter.ObjectiveIds.Contains(po.ObjectiveId.ToString())));
-
-            if (filter.AccessoryIds != null && filter.AccessoryIds.Any())
-                query = query.Where(p => p.ProductAccessories.Any(pa => filter.AccessoryIds.Contains(pa.AccessoryId.ToString())));
+                query = query.Where(p => p.Name.Contains(filter.Name));           
 
             // Filtro por sabor usando o novo campo Flavor do enum
             if (filter.Flavors != null && filter.Flavors.Any())
@@ -100,14 +82,6 @@ namespace AcademiaLoja.Infra.Repositories
         public async Task<FiltersDto> GetFiltersData(CancellationToken cancellationToken)
         {
             // 1. Categorias disponíveis
-            var availableCategories = await _context.Categories
-                .Select(c => new FilterCategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    ProductCount = c.ProductCategories.Count
-                })
-                .ToListAsync(cancellationToken);
 
             // 2. Sabores disponíveis usando o Enum
             var availableFlavors = await _context.ProductAttributes
@@ -153,9 +127,6 @@ namespace AcademiaLoja.Infra.Repositories
 
             return new FiltersDto
             {
-                Categories = availableCategories,
-                Flavors = availableFlavors,
-                Brands = availableBrands,
                 QuantityRanges = quantityRanges,
                 MinPrice = minPrice,
                 MaxPrice = maxPrice
@@ -168,7 +139,6 @@ namespace AcademiaLoja.Infra.Repositories
             {
                 // Atualizar propriedades básicas do produto
                 var existingProduct = await _context.Products
-                    .Include(p => p.ProductCategories)
                     .Include(p => p.Attributes)
                     .Include(p => p.Inventory)
                     .FirstOrDefaultAsync(p => p.Id == product.Id, cancellationToken) ?? throw new Exception($"Product with ID {product.Id} not found.");
@@ -199,29 +169,7 @@ namespace AcademiaLoja.Infra.Repositories
                         Quantity = (int)request.StockQuantity,
                         LastUpdated = DateTime.UtcNow
                     };
-                }
-
-                // Atualizar categorias
-                // 1. Remover associações antigas
-                _context.ProductCategories.RemoveRange(product.ProductCategories);
-
-                // 2. Adicionar novas associações
-                if (request.CategoryIds != null && request.CategoryIds.Any())
-                {
-                    foreach (var categoryId in request.CategoryIds)
-                    {
-                        // Verificar se a categoria existe
-                        bool categoryExists = await _context.Categories.AnyAsync(c => c.Id == categoryId, cancellationToken);
-                        if (categoryExists)
-                        {
-                            product.ProductCategories.Add(new ProductCategory
-                            {
-                                ProductId = product.Id,
-                                CategoryId = categoryId
-                            });
-                        }
-                    }
-                }
+                }                
 
                 // Atualizar atributos
                 // 1. Remover atributos antigos
@@ -242,57 +190,7 @@ namespace AcademiaLoja.Infra.Repositories
                             Category = attr.Category,
                             Objective = attr.Objective,
                             Accessory = attr.Accessory
-                        };
-
-                        //if (attr.Flavor is not null)
-                        //    productAttribute.Flavor = attr.Flavor;
-
-                        //if (attr.Brand is not null)
-                        //    productAttribute.Brand = attr.Brand;
-
-                        //if (attr.Category is not null)
-                        //    productAttribute.Category = attr.Category;
-
-                        //if (attr.Objective is not null)
-                        //    productAttribute.Objective = attr.Objective;
-
-                        //if (attr.Accessory is not null)
-                        //    productAttribute.Accessory = attr.Accessory;
-
-                        // Converter e atribuir valores de acordo com o tipo de atributo
-                        //switch (attr.Key.ToLower())
-                        //{
-                        //    case "flavor":
-                        //    case "sabor":
-                        //        if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
-                        //            productAttribute.Flavor = flavor;
-                        //        break;
-                        //    case "brand":
-                        //    case "marca":
-                        //        if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
-                        //            productAttribute.Brand = brand;
-                        //        break;
-                        //    case "category":
-                        //    case "categoria":
-                        //        if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
-                        //            productAttribute.Category = category;
-                        //        break;
-                        //    case "objective":
-                        //    case "objetivo":
-                        //        if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
-                        //            productAttribute.Objective = objective;
-                        //        break;
-                        //    case "accessory":
-                        //    case "acessorio":
-                        //        if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
-                        //            productAttribute.Accessory = accessory;
-                        //        break;
-                        //    default:
-                        //        // Para atributos não padronizados, mantenha o Key/Value
-                        //        productAttribute.Key = attr.Key;
-                        //        productAttribute.Value = attr.Value;
-                        //        break;
-                        //}
+                        };                                                
 
                         product.Attributes.Add(productAttribute);
                     }
@@ -312,15 +210,7 @@ namespace AcademiaLoja.Infra.Repositories
                     ImageUrl = product.ImageUrl,
                     IsActive = product.IsActive,
                     UpdatedAt = product.UpdatedAt,
-                    InventoryId = product.Inventory.Id,
-                    Categories = await _context.ProductCategories
-                        .Where(pc => pc.ProductId == product.Id)
-                        .Select(pc => new CategoryDto
-                        {
-                            Id = pc.Category.Id,
-                            Name = pc.Category.Name,
-                            Description = pc.Category.Description
-                        }).ToListAsync(cancellationToken),
+                    InventoryId = product.Inventory.Id,                   
                     Attributes = product.Attributes
                         .Select(a => new ProductAttributeDto
                         {
@@ -345,10 +235,10 @@ namespace AcademiaLoja.Infra.Repositories
         public async Task<Product> GetProductById(Guid id)
         {
             var product = _context.Products
-                .Include(p => p.ProductCategories)
-                    .ThenInclude(pc => pc.Category)
-                .Include(p => p.Attributes)
                 .Where(x => x.Id == id)
+                .Include(p => p.Attributes)                
+                .Include(p => p.Inventory)
+                .Include(p => p.OrderItems)
                 .AsQueryable();
 
             return await product.FirstOrDefaultAsync();
@@ -357,55 +247,7 @@ namespace AcademiaLoja.Infra.Repositories
         public async Task<CreateProductResponse> CreateProduct(CreateProductRequest request, CancellationToken cancellationToken)
         {
             try
-            {
-                // Verificar se todas as categorias existem
-                var categories = new List<Category>();
-                foreach (var categoryId in request.CategoryIds)
-                {
-                    var category = await _context.Categories.FindAsync(categoryId);
-                    if (category == null)
-                    {
-                        throw new Exception($"Category with ID {categoryId} not found.");
-                    }
-                    categories.Add(category);
-                }
-
-                // Verificar se todas as marcas existem
-                var brands = new List<Domain.Entities.Brand>();
-                foreach (var brandId in request.BrandIds)
-                {
-                    var brand = await _context.Brands.FindAsync(brandId);
-
-                    if (brand == null)
-                        throw new Exception($"Brand with ID {brandId} not found.");
-
-                    brands.Add(brand);
-                }
-
-                // Verificar se todas os objetivos existem
-                var objectives = new List<Domain.Entities.Objective>();
-                foreach (var objectiveId in request.ObjectivesIds)
-                {
-                    var objective = await _context.Objectives.FindAsync(objectiveId);
-
-                    if (objective == null)
-                        throw new Exception($"Objective with ID {objectiveId} not found.");
-
-                    objectives.Add(objective);
-                }
-
-                // Verificar se todos os acessórios existem
-                var accessories = new List<Accessory>();
-                foreach (var accessoryId in request.AccessoryIds)
-                {
-                    var accessory = await _context.Accessories.FindAsync(accessoryId);
-                    if (accessory == null)
-                    {
-                        throw new Exception($"Accessory with ID {accessoryId} not found.");
-                    }
-                    accessories.Add(accessory);
-                }
-
+            {               
                 // Criar o produto
                 var now = DateTime.UtcNow;
                 var product = new Product
@@ -432,59 +274,7 @@ namespace AcademiaLoja.Infra.Repositories
                     Quantity = request.StockQuantity,
                     LastUpdated = now
                 };
-                _context.Inventories.Add(inventory);
-
-                // Associar categorias ao produto
-                var productCategories = new List<ProductCategory>();
-                foreach (var category in categories)
-                {
-                    var productCategory = new ProductCategory
-                    {
-                        ProductId = product.Id,
-                        CategoryId = category.Id
-                    };
-                    _context.ProductCategories.Add(productCategory);
-                    productCategories.Add(productCategory);
-                }
-
-                // Associar marcas ao produto
-                var productBrands = new List<ProductBrand>();
-                foreach (var brand in brands)
-                {
-                    var productBrand = new ProductBrand
-                    {
-                        ProductId = product.Id,
-                        BrandId = brand.Id
-                    };
-                    _context.ProductBrands.Add(productBrand);
-                    productBrands.Add(productBrand);
-                }
-
-                // Associar objetivos ao produto
-                var productObjectives = new List<ProductObjective>();
-                foreach (var objective in objectives)
-                {
-                    var productObjective = new ProductObjective
-                    {
-                        ProductId = product.Id,
-                        ObjectiveId = objective.Id
-                    };
-                    _context.ProductObjectives.Add(productObjective);
-                    productObjectives.Add(productObjective);
-                }
-
-                // Associar acessórios ao produto
-                var productAccessories = new List<ProductAccessory>();
-                foreach (var accessory in accessories)
-                {
-                    var productAccessory = new ProductAccessory
-                    {
-                        ProductId = product.Id,
-                        AccessoryId = accessory.Id,
-                    };
-                    _context.ProductAccessories.Add(productAccessory);
-                    productAccessories.Add(productAccessory);
-                }
+                _context.Inventories.Add(inventory);               
 
                 // Adicionar atributos do produto
                 var productAttributes = new List<ProductAttribute>();
@@ -502,86 +292,6 @@ namespace AcademiaLoja.Infra.Repositories
                         Objective = attr.Objective,
                         Accessory = attr.Accessory
                     };
-
-                    //productAttribute.Key = attr.Key;
-                    //productAttribute.Value = attr.Value;
-
-                    //if (attr.Flavor is not null)
-                    //    productAttribute.Flavor = attr.Flavor;
-
-                    //if (attr.Brand is not null)
-                    //    productAttribute.Brand = attr.Brand;
-
-                    //if (attr.Category is not null)
-                    //    productAttribute.Category = attr.Category;
-
-                    //if (attr.Objective is not null)
-                    //    productAttribute.Objective = attr.Objective;
-
-                    //if (attr.Accessory is not null)
-                    //    productAttribute.Accessory = attr.Accessory;
-
-
-                    // Converter e atribuir valores de acordo com o tipo de atributo
-                    //switch (attr.Key.ToLower())
-                    //{
-                    //    case "flavor":
-                    //    case "sabor":
-                    //        if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
-                    //            productAttribute.Flavor = flavor;
-                    //        else
-                    //        {
-                    //            // Fallback para Key/Value se não conseguir converter
-                    //            productAttribute.Key = attr.Key;
-                    //            productAttribute.Value = attr.Value;
-                    //        }
-                    //        break;
-                    //    case "brand":
-                    //    case "marca":
-                    //        if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
-                    //            productAttribute.Brand = brand;
-                    //        else
-                    //        {
-                    //            productAttribute.Key = attr.Key;
-                    //            productAttribute.Value = attr.Value;
-                    //        }
-                    //        break;
-                    //    case "category":
-                    //    case "categoria":
-                    //        if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
-                    //            productAttribute.Category = category;
-                    //        else
-                    //        {
-                    //            productAttribute.Key = attr.Key;
-                    //            productAttribute.Value = attr.Value;
-                    //        }
-                    //        break;
-                    //    case "objective":
-                    //    case "objetivo":
-                    //        if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
-                    //            productAttribute.Objective = objective;
-                    //        else
-                    //        {
-                    //            productAttribute.Key = attr.Key;
-                    //            productAttribute.Value = attr.Value;
-                    //        }
-                    //        break;
-                    //    case "accessory":
-                    //    case "acessorio":
-                    //        if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
-                    //            productAttribute.Accessory = accessory;
-                    //        else
-                    //        {
-                    //            productAttribute.Key = attr.Key;
-                    //            productAttribute.Value = attr.Value;
-                    //        }
-                    //        break;
-                    //    default:
-                    //        // Para atributos não padronizados, mantenha o Key/Value
-                    //        productAttribute.Key = attr.Key;
-                    //        productAttribute.Value = attr.Value;
-                    //        break;
-                    //}
 
                     _context.ProductAttributes.Add(productAttribute);
                     productAttributes.Add(productAttribute);
@@ -601,19 +311,7 @@ namespace AcademiaLoja.Infra.Repositories
                     ImageUrl = product.ImageUrl,
                     IsActive = product.IsActive,
                     CreatedAt = product.CreatedAt,
-                    UpdatedAt = product.UpdatedAt,
-                    Categories = categories.Select(c => new CategoryDto
-                    {
-                        Id = c.Id,
-                        Name = c.Name,
-                        Description = c.Description
-                    }).ToList(),
-                    Brands = brands.Select(c => new BrandDto
-                    {
-                        Id = c.Id,
-                        Name = c.Name,
-                        Description = c.Description
-                    }).ToList(),
+                    UpdatedAt = product.UpdatedAt,                   
                     Attributes = productAttributes.Select(a => new ProductAttributeDto
                     {
                         Id = a.Id,
@@ -624,13 +322,7 @@ namespace AcademiaLoja.Infra.Repositories
                         Category = a.Category,
                         Objective = a.Objective,
                         Accessory = a.Accessory
-                    }).ToList(),
-                    Accessories = accessories.Select(a => new AccessoryDto
-                    {
-                        Id = a.Id,
-                        Name = a.Name,
-                        Description = a.Description
-                    }).ToList(),
+                    }).ToList(),                    
                     Message = "Product created successfully."
                 };
 

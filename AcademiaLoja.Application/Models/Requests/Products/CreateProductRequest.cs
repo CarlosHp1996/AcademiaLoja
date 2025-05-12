@@ -1,5 +1,4 @@
-﻿using AcademiaLoja.Application.Models.Dtos;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AcademiaLoja.Application.Models.Requests.Products
 {
@@ -25,18 +24,7 @@ namespace AcademiaLoja.Application.Models.Requests.Products
         [Required]
         public bool IsActive { get; set; } = true;
 
-        public List<Guid> CategoryIds { get; set; } = new List<Guid>();
-
         // Atributos do produto (sabor, marca, etc.)
         public List<ProductAttributeRequest> Attributes { get; set; } = new List<ProductAttributeRequest>();
-
-        [Required]
-        public List<Guid> BrandIds { get; set; } = new List<Guid>();
-
-        [Required]
-        public List<Guid> ObjectivesIds { get; set; } = new List<Guid>();
-
-        [Required]
-        public List<Guid> AccessoryIds { get; set; } = new List<Guid>();
     }
 }
