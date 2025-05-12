@@ -13,7 +13,6 @@ namespace AcademiaLoja.Application.Models.Responses.Products
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public List<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
         public List<ProductAttributeDto> Attributes { get; set; } = new List<ProductAttributeDto>();
     }
 }

@@ -22,7 +22,7 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
             try
             {
                 // Buscar o produto pelo ID incluindo suas relações
-                var product = await _repository.GetById(query.Id);                
+                var product = await _repository.GetProductById(query.Id);                
 
                 if (product == null)
                 {
@@ -41,19 +41,18 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                     ImageUrl = product.ImageUrl,
                     IsActive = product.IsActive,
                     CreatedAt = product.CreatedAt,
-                    UpdatedAt = product.UpdatedAt,
-                    Categories = product.ProductCategories
-                        .Select(pc => new CategoryDto
-                        {
-                            Id = pc.Category.Id,
-                            Name = pc.Category.Name,
-                            Description = pc.Category.Description
-                        }).ToList(),
+                    UpdatedAt = product.UpdatedAt,                    
                     Attributes = product.Attributes
                         .Select(a => new ProductAttributeDto
                         {
+                            Id = a.Id,
                             Key = a.Key,
-                            Value = a.Value
+                            Value = a.Value,
+                            Accessory = a.Accessory,
+                            Brand = a.Brand,
+                            Category = a.Category,
+                            Flavor = a.Flavor,
+                            Objective = a.Objective
                         }).ToList()
                 };
 

@@ -9,10 +9,6 @@
         public int? StockQuantity { get; set; }
         public string? ImageUrl { get; set; }
         public bool? IsActive { get; set; }
-        public List<string>? Categories { get; set; } = new List<string>();
-        public List<string>? Brands { get; set; } = new List<string>();
-        public List<string>? Objectives { get; set; } = new List<string>();
         public List<ProductAttributeDto>? Attributes { get; set; } = new List<ProductAttributeDto>();
-        public List<string>? Accessories { get; set; } = new List<string>();
     }
 }
