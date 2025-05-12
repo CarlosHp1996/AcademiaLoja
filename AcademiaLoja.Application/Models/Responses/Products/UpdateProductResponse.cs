@@ -14,6 +14,7 @@ namespace AcademiaLoja.Application.Models.Responses.Products
         public DateTime UpdatedAt { get; set; }
         public List<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
         public List<ProductAttributeDto> Attributes { get; set; } = new List<ProductAttributeDto>();
+        public Guid InventoryId { get; set; }
         public string Message { get; set; }
     }
 }

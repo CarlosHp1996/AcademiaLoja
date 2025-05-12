@@ -167,19 +167,28 @@ namespace AcademiaLoja.Infra.Repositories
             try
             {
                 // Atualizar propriedades básicas do produto
-                product.Name = request.Name;
-                product.Description = request.Description;
-                product.Price = (decimal)request.Price;
-                product.StockQuantity = (int)request.StockQuantity;
-                product.ImageUrl = request.ImageUrl;
-                product.IsActive = (bool)request.IsActive;
-                product.UpdatedAt = DateTime.UtcNow;
+                var existingProduct = await _context.Products
+                    .Include(p => p.ProductCategories)
+                    .Include(p => p.Attributes)
+                    .Include(p => p.Inventory)
+                    .FirstOrDefaultAsync(p => p.Id == product.Id, cancellationToken) ?? throw new Exception($"Product with ID {product.Id} not found.");
+
+                // Atualizar propriedades do produto
+
+
+                existingProduct.Name = request.Name;
+                existingProduct.Description = request.Description;
+                existingProduct.Price = (decimal)request.Price;
+                existingProduct.StockQuantity = (int)request.StockQuantity;
+                existingProduct.ImageUrl = request.ImageUrl;
+                existingProduct.IsActive = (bool)request.IsActive;
+                existingProduct.UpdatedAt = DateTime.UtcNow;
 
                 // Atualizar estoque no inventário
-                if (product.Inventory != null)
+                if (request.InventoryId is not null)
                 {
-                    product.Inventory.Quantity = (int)request.StockQuantity;
-                    product.Inventory.LastUpdated = DateTime.UtcNow;
+                    existingProduct.Inventory.Quantity = (int)request.StockQuantity;
+                    existingProduct.Inventory.LastUpdated = DateTime.UtcNow;
                 }
                 else
                 {
@@ -225,43 +234,65 @@ namespace AcademiaLoja.Infra.Repositories
                     {
                         var productAttribute = new ProductAttribute
                         {
-                            ProductId = product.Id
+                            ProductId = product.Id,
+                            Key = attr.Key,
+                            Value = attr.Value,
+                            Flavor = attr.Flavor,
+                            Brand = attr.Brand,
+                            Category = attr.Category,
+                            Objective = attr.Objective,
+                            Accessory = attr.Accessory
                         };
 
+                        //if (attr.Flavor is not null)
+                        //    productAttribute.Flavor = attr.Flavor;
+
+                        //if (attr.Brand is not null)
+                        //    productAttribute.Brand = attr.Brand;
+
+                        //if (attr.Category is not null)
+                        //    productAttribute.Category = attr.Category;
+
+                        //if (attr.Objective is not null)
+                        //    productAttribute.Objective = attr.Objective;
+
+                        //if (attr.Accessory is not null)
+                        //    productAttribute.Accessory = attr.Accessory;
+
                         // Converter e atribuir valores de acordo com o tipo de atributo
-                        switch (attr.Key.ToLower())
-                        {
-                            case "flavor":
-                            case "sabor":
-                                if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
-                                    productAttribute.Flavor = flavor;
-                                break;
-                            case "brand":
-                            case "marca":
-                                if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
-                                    productAttribute.Brand = brand;
-                                break;
-                            case "category":
-                            case "categoria":
-                                if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
-                                    productAttribute.Category = category;
-                                break;
-                            case "objective":
-                            case "objetivo":
-                                if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
-                                    productAttribute.Objective = objective;
-                                break;
-                            case "accessory":
-                            case "acessorio":
-                                if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
-                                    productAttribute.Accessory = accessory;
-                                break;
-                            default:
-                                // Para atributos não padronizados, mantenha o Key/Value
-                                productAttribute.Key = attr.Key;
-                                productAttribute.Value = attr.Value;
-                                break;
-                        }
+                        //switch (attr.Key.ToLower())
+                        //{
+                        //    case "flavor":
+                        //    case "sabor":
+                        //        if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
+                        //            productAttribute.Flavor = flavor;
+                        //        break;
+                        //    case "brand":
+                        //    case "marca":
+                        //        if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
+                        //            productAttribute.Brand = brand;
+                        //        break;
+                        //    case "category":
+                        //    case "categoria":
+                        //        if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
+                        //            productAttribute.Category = category;
+                        //        break;
+                        //    case "objective":
+                        //    case "objetivo":
+                        //        if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
+                        //            productAttribute.Objective = objective;
+                        //        break;
+                        //    case "accessory":
+                        //    case "acessorio":
+                        //        if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
+                        //            productAttribute.Accessory = accessory;
+                        //        break;
+                        //    default:
+                        //        // Para atributos não padronizados, mantenha o Key/Value
+                        //        productAttribute.Key = attr.Key;
+                        //        productAttribute.Value = attr.Value;
+                        //        break;
+                        //}
 
                         product.Attributes.Add(productAttribute);
                     }
@@ -281,6 +312,7 @@ namespace AcademiaLoja.Infra.Repositories
                     ImageUrl = product.ImageUrl,
                     IsActive = product.IsActive,
                     UpdatedAt = product.UpdatedAt,
+                    InventoryId = product.Inventory.Id,
                     Categories = await _context.ProductCategories
                         .Where(pc => pc.ProductId == product.Id)
                         .Select(pc => new CategoryDto
@@ -293,7 +325,12 @@ namespace AcademiaLoja.Infra.Repositories
                         .Select(a => new ProductAttributeDto
                         {
                             Key = GetAttributeTypeName(a),
-                            Value = GetAttributeValue(a)
+                            Value = GetAttributeValue(a),
+                            Flavor = a.Flavor,
+                            Brand = a.Brand,
+                            Category = a.Category,
+                            Objective = a.Objective,
+                            Accessory = a.Accessory
                         }).ToList()
                 };
 
@@ -456,69 +493,95 @@ namespace AcademiaLoja.Infra.Repositories
                     var productAttribute = new ProductAttribute
                     {
                         Id = Guid.NewGuid(),
-                        ProductId = product.Id
+                        ProductId = product.Id,
+                        Key = attr.Key,
+                        Value = attr.Value,
+                        Flavor = attr.Flavor,
+                        Brand = attr.Brand,
+                        Category = attr.Category,
+                        Objective = attr.Objective,
+                        Accessory = attr.Accessory
                     };
 
+                    //productAttribute.Key = attr.Key;
+                    //productAttribute.Value = attr.Value;
+
+                    //if (attr.Flavor is not null)
+                    //    productAttribute.Flavor = attr.Flavor;
+
+                    //if (attr.Brand is not null)
+                    //    productAttribute.Brand = attr.Brand;
+
+                    //if (attr.Category is not null)
+                    //    productAttribute.Category = attr.Category;
+
+                    //if (attr.Objective is not null)
+                    //    productAttribute.Objective = attr.Objective;
+
+                    //if (attr.Accessory is not null)
+                    //    productAttribute.Accessory = attr.Accessory;
+
+
                     // Converter e atribuir valores de acordo com o tipo de atributo
-                    switch (attr.Key.ToLower())
-                    {
-                        case "flavor":
-                        case "sabor":
-                            if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
-                                productAttribute.Flavor = flavor;
-                            else
-                            {
-                                // Fallback para Key/Value se não conseguir converter
-                                productAttribute.Key = attr.Key;
-                                productAttribute.Value = attr.Value;
-                            }
-                            break;
-                        case "brand":
-                        case "marca":
-                            if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
-                                productAttribute.Brand = brand;
-                            else
-                            {
-                                productAttribute.Key = attr.Key;
-                                productAttribute.Value = attr.Value;
-                            }
-                            break;
-                        case "category":
-                        case "categoria":
-                            if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
-                                productAttribute.Category = category;
-                            else
-                            {
-                                productAttribute.Key = attr.Key;
-                                productAttribute.Value = attr.Value;
-                            }
-                            break;
-                        case "objective":
-                        case "objetivo":
-                            if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
-                                productAttribute.Objective = objective;
-                            else
-                            {
-                                productAttribute.Key = attr.Key;
-                                productAttribute.Value = attr.Value;
-                            }
-                            break;
-                        case "accessory":
-                        case "acessorio":
-                            if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
-                                productAttribute.Accessory = accessory;
-                            else
-                            {
-                                productAttribute.Key = attr.Key;
-                                productAttribute.Value = attr.Value;
-                            }
-                            break;
-                        default:
-                            // Para atributos não padronizados, mantenha o Key/Value
-                            productAttribute.Key = attr.Key;
-                            productAttribute.Value = attr.Value;
-                            break;
-                    }
+                    //switch (attr.Key.ToLower())
+                    //{
+                    //    case "flavor":
+                    //    case "sabor":
+                    //        if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
+                    //            productAttribute.Flavor = flavor;
+                    //        else
+                    //        {
+                    //            // Fallback para Key/Value se não conseguir converter
+                    //            productAttribute.Key = attr.Key;
+                    //            productAttribute.Value = attr.Value;
+                    //        }
+                    //        break;
+                    //    case "brand":
+                    //    case "marca":
+                    //        if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
+                    //            productAttribute.Brand = brand;
+                    //        else
+                    //        {
+                    //            productAttribute.Key = attr.Key;
+                    //            productAttribute.Value = attr.Value;
+                    //        }
+                    //        break;
+                    //    case "category":
+                    //    case "categoria":
+                    //        if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
+                    //            productAttribute.Category = category;
+                    //        else
+                    //        {
+                    //            productAttribute.Key = attr.Key;
+                    //            productAttribute.Value = attr.Value;
+                    //        }
+                    //        break;
+                    //    case "objective":
+                    //    case "objetivo":
+                    //        if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
+                    //            productAttribute.Objective = objective;
+                    //        else
+                    //        {
+                    //            productAttribute.Key = attr.Key;
+                    //            productAttribute.Value = attr.Value;
+                    //        }
+                    //        break;
+                    //    case "accessory":
+                    //    case "acessorio":
+                    //        if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
+                    //            productAttribute.Accessory = accessory;
+                    //        else
+                    //        {
+                    //            productAttribute.Key = attr.Key;
+                    //            productAttribute.Value = attr.Value;
+                    //        }
+                    //        break;
+                    //    default:
+                    //        // Para atributos não padronizados, mantenha o Key/Value
+                    //        productAttribute.Key = attr.Key;
+                    //        productAttribute.Value = attr.Value;
+                    //        break;
+                    //}
 
                     _context.ProductAttributes.Add(productAttribute);
                     productAttributes.Add(productAttribute);
@@ -555,7 +618,12 @@ namespace AcademiaLoja.Infra.Repositories
                     {
                         Id = a.Id,
                         Key = GetAttributeTypeName(a),
-                        Value = GetAttributeValue(a)
+                        Value = GetAttributeValue(a),
+                        Flavor = a.Flavor,
+                        Brand = a.Brand,
+                        Category = a.Category,
+                        Objective = a.Objective,
+                        Accessory = a.Accessory
                     }).ToList(),
                     Accessories = accessories.Select(a => new AccessoryDto
                     {

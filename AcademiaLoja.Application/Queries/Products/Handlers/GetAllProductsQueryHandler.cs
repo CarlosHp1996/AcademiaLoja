@@ -61,7 +61,12 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                             .Select(a => new ProductAttributeDto
                             {
                                 Key = a.Key,
-                                Value = a.Value
+                                Value = a.Value,
+                                Accessory = a.Accessory,
+                                Brand = a.Brand,
+                                Category = a.Category,
+                                Objective = a.Objective,
+                                Flavor = a.Flavor,
                             }).ToList() ?? new List<ProductAttributeDto>()
                     }).ToList(),
 
