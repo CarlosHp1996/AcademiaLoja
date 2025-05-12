@@ -21,9 +21,10 @@ namespace AcademiaLoja.Application.Models.Requests.Products
 
         public bool? IsActive { get; set; }
 
-        public List<Guid> CategoryIds { get; set; } = new List<Guid>();
+        public List<Guid>? CategoryIds { get; set; } = new List<Guid>();
 
         // Atributos do produto (sabor, marca, etc.)
-        public List<ProductAttributeDto> Attributes { get; set; } = new List<ProductAttributeDto>();
+        public List<ProductAttributeDto>? Attributes { get; set; } = new List<ProductAttributeDto>();
+        public Guid? InventoryId { get; set; }
     }
 }
