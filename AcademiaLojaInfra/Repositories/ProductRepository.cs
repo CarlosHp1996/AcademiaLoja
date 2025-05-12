@@ -4,9 +4,9 @@ using AcademiaLoja.Application.Models.Filters;
 using AcademiaLoja.Application.Models.Requests.Products;
 using AcademiaLoja.Application.Models.Responses.Products;
 using AcademiaLoja.Domain.Entities;
+using AcademiaLoja.Domain.Enums;
 using AcademiaLoja.Domain.Helpers;
 using AcademiaLoja.Infra.Data;
-using AcademiaLoja.Infra.Migrations;
 using Microsoft.EntityFrameworkCore;
 using ProductAccessory = AcademiaLoja.Domain.Entities.ProductAccessory;
 
@@ -56,13 +56,19 @@ namespace AcademiaLoja.Infra.Repositories
             if (filter.AccessoryIds != null && filter.AccessoryIds.Any())
                 query = query.Where(p => p.ProductAccessories.Any(pa => filter.AccessoryIds.Contains(pa.AccessoryId.ToString())));
 
+            // Filtro por sabor usando o novo campo Flavor do enum
             if (filter.Flavors != null && filter.Flavors.Any())
-                query = query.Where(p => p.Attributes.Any(a =>
-                    a.Key.ToLower() == "sabor" && filter.Flavors.Contains(a.Value)));
+            {
+                var flavorValues = filter.Flavors.Select(f => Enum.Parse<EnumFlavor>(f)).ToList();
+                query = query.Where(p => p.Attributes.Any(a => a.Flavor != null && flavorValues.Contains(a.Flavor.Value)));
+            }
 
+            // Filtro por marca usando o novo campo Brand do enum
             if (filter.BrandIds != null && filter.BrandIds.Any())
-                query = query.Where(p => p.Attributes.Any(a =>
-                    a.Key.ToLower() == "marca" && filter.BrandIds.Contains(a.Value)));
+            {
+                var brandValues = filter.BrandIds.Select(b => Enum.Parse<EnumBrand>(b)).ToList();
+                query = query.Where(p => p.Attributes.Any(a => a.Brand != null && brandValues.Contains(a.Brand.Value)));
+            }
 
             if (filter.QuantityRanges != null && filter.QuantityRanges.Any())
             {
@@ -103,36 +109,36 @@ namespace AcademiaLoja.Infra.Repositories
                 })
                 .ToListAsync(cancellationToken);
 
-            // 2. Sabores disponíveis
+            // 2. Sabores disponíveis usando o Enum
             var availableFlavors = await _context.ProductAttributes
-                .Where(a => a.Key.ToLower() == "sabor")
-                .GroupBy(a => a.Value)
+                .Where(a => a.Flavor != null)
+                .GroupBy(a => a.Flavor)
                 .Select(g => new FilterAttributeDto
                 {
-                    Value = g.Key,
+                    Value = g.Key.ToString(),
                     ProductCount = g.Count()
                 })
                 .ToListAsync(cancellationToken);
 
-            // 3. Marcas disponíveis
+            // 3. Marcas disponíveis usando o Enum
             var availableBrands = await _context.ProductAttributes
-                .Where(a => a.Key.ToLower() == "marca")
-                .GroupBy(a => a.Value)
+                .Where(a => a.Brand != null)
+                .GroupBy(a => a.Brand)
                 .Select(g => new FilterAttributeDto
                 {
-                    Value = g.Key,
+                    Value = g.Key.ToString(),
                     ProductCount = g.Count()
                 })
                 .ToListAsync(cancellationToken);
 
             // 4. Faixas de quantidade
             var quantityRanges = new List<FilterQuantityRangeDto>
-        {
-            new FilterQuantityRangeDto { MinQuantity = 0, MaxQuantity = 10, ProductCount = 0 },
-            new FilterQuantityRangeDto { MinQuantity = 11, MaxQuantity = 50, ProductCount = 0 },
-            new FilterQuantityRangeDto { MinQuantity = 51, MaxQuantity = 100, ProductCount = 0 },
-            new FilterQuantityRangeDto { MinQuantity = 101, MaxQuantity = int.MaxValue, ProductCount = 0 }
-        };
+            {
+                new FilterQuantityRangeDto { MinQuantity = 0, MaxQuantity = 10, ProductCount = 0 },
+                new FilterQuantityRangeDto { MinQuantity = 11, MaxQuantity = 50, ProductCount = 0 },
+                new FilterQuantityRangeDto { MinQuantity = 51, MaxQuantity = 100, ProductCount = 0 },
+                new FilterQuantityRangeDto { MinQuantity = 101, MaxQuantity = int.MaxValue, ProductCount = 0 }
+            };
 
             // Contar produtos em cada faixa de quantidade
             foreach (var range in quantityRanges)
@@ -154,7 +160,7 @@ namespace AcademiaLoja.Infra.Repositories
                 MinPrice = minPrice,
                 MaxPrice = maxPrice
             };
-        }        
+        }
 
         public async Task<UpdateProductResponse> UpdateProduct(Product product, UpdateProductRequest request, CancellationToken cancellationToken)
         {
@@ -217,12 +223,47 @@ namespace AcademiaLoja.Infra.Repositories
                 {
                     foreach (var attr in request.Attributes)
                     {
-                        product.Attributes.Add(new ProductAttribute
+                        var productAttribute = new ProductAttribute
                         {
-                            ProductId = product.Id,
-                            Key = attr.Key,
-                            Value = attr.Value
-                        });
+                            ProductId = product.Id
+                        };
+
+                        // Converter e atribuir valores de acordo com o tipo de atributo
+                        switch (attr.Key.ToLower())
+                        {
+                            case "flavor":
+                            case "sabor":
+                                if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
+                                    productAttribute.Flavor = flavor;
+                                break;
+                            case "brand":
+                            case "marca":
+                                if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
+                                    productAttribute.Brand = brand;
+                                break;
+                            case "category":
+                            case "categoria":
+                                if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
+                                    productAttribute.Category = category;
+                                break;
+                            case "objective":
+                            case "objetivo":
+                                if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
+                                    productAttribute.Objective = objective;
+                                break;
+                            case "accessory":
+                            case "acessorio":
+                                if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
+                                    productAttribute.Accessory = accessory;
+                                break;
+                            default:
+                                // Para atributos não padronizados, mantenha o Key/Value
+                                productAttribute.Key = attr.Key;
+                                productAttribute.Value = attr.Value;
+                                break;
+                        }
+
+                        product.Attributes.Add(productAttribute);
                     }
                 }
 
@@ -251,8 +292,8 @@ namespace AcademiaLoja.Infra.Repositories
                     Attributes = product.Attributes
                         .Select(a => new ProductAttributeDto
                         {
-                            Key = a.Key,
-                            Value = a.Value
+                            Key = GetAttributeTypeName(a),
+                            Value = GetAttributeValue(a)
                         }).ToList()
                 };
 
@@ -415,10 +456,70 @@ namespace AcademiaLoja.Infra.Repositories
                     var productAttribute = new ProductAttribute
                     {
                         Id = Guid.NewGuid(),
-                        ProductId = product.Id,
-                        Key = attr.Key,
-                        Value = attr.Value
+                        ProductId = product.Id
                     };
+
+                    // Converter e atribuir valores de acordo com o tipo de atributo
+                    switch (attr.Key.ToLower())
+                    {
+                        case "flavor":
+                        case "sabor":
+                            if (Enum.TryParse<EnumFlavor>(attr.Value, true, out var flavor))
+                                productAttribute.Flavor = flavor;
+                            else
+                            {
+                                // Fallback para Key/Value se não conseguir converter
+                                productAttribute.Key = attr.Key;
+                                productAttribute.Value = attr.Value;
+                            }
+                            break;
+                        case "brand":
+                        case "marca":
+                            if (Enum.TryParse<EnumBrand>(attr.Value, true, out var brand))
+                                productAttribute.Brand = brand;
+                            else
+                            {
+                                productAttribute.Key = attr.Key;
+                                productAttribute.Value = attr.Value;
+                            }
+                            break;
+                        case "category":
+                        case "categoria":
+                            if (Enum.TryParse<EnumCategory>(attr.Value, true, out var category))
+                                productAttribute.Category = category;
+                            else
+                            {
+                                productAttribute.Key = attr.Key;
+                                productAttribute.Value = attr.Value;
+                            }
+                            break;
+                        case "objective":
+                        case "objetivo":
+                            if (Enum.TryParse<EnumObjective>(attr.Value, true, out var objective))
+                                productAttribute.Objective = objective;
+                            else
+                            {
+                                productAttribute.Key = attr.Key;
+                                productAttribute.Value = attr.Value;
+                            }
+                            break;
+                        case "accessory":
+                        case "acessorio":
+                            if (Enum.TryParse<EnumAccessory>(attr.Value, true, out var accessory))
+                                productAttribute.Accessory = accessory;
+                            else
+                            {
+                                productAttribute.Key = attr.Key;
+                                productAttribute.Value = attr.Value;
+                            }
+                            break;
+                        default:
+                            // Para atributos não padronizados, mantenha o Key/Value
+                            productAttribute.Key = attr.Key;
+                            productAttribute.Value = attr.Value;
+                            break;
+                    }
+
                     _context.ProductAttributes.Add(productAttribute);
                     productAttributes.Add(productAttribute);
                 }
@@ -453,8 +554,8 @@ namespace AcademiaLoja.Infra.Repositories
                     Attributes = productAttributes.Select(a => new ProductAttributeDto
                     {
                         Id = a.Id,
-                        Key = a.Key,
-                        Value = a.Value
+                        Key = GetAttributeTypeName(a),
+                        Value = GetAttributeValue(a)
                     }).ToList(),
                     Accessories = accessories.Select(a => new AccessoryDto
                     {
@@ -471,6 +572,27 @@ namespace AcademiaLoja.Infra.Repositories
             {
                 throw new Exception($"Error creating product: {ex.Message}", ex);
             }
+        }
+
+        // Métodos auxiliares para lidar com os atributos
+        private string GetAttributeTypeName(ProductAttribute attribute)
+        {
+            if (attribute.Flavor.HasValue) return "Flavor";
+            if (attribute.Brand.HasValue) return "Brand";
+            if (attribute.Category.HasValue) return "Category";
+            if (attribute.Objective.HasValue) return "Objective";
+            if (attribute.Accessory.HasValue) return "Accessory";
+            return attribute.Key; // Fallback para atributos customizados
+        }
+
+        private string GetAttributeValue(ProductAttribute attribute)
+        {
+            if (attribute.Flavor.HasValue) return attribute.Flavor.Value.ToString();
+            if (attribute.Brand.HasValue) return attribute.Brand.Value.ToString();
+            if (attribute.Category.HasValue) return attribute.Category.Value.ToString();
+            if (attribute.Objective.HasValue) return attribute.Objective.Value.ToString();
+            if (attribute.Accessory.HasValue) return attribute.Accessory.Value.ToString();
+            return attribute.Value; // Fallback para atributos customizados
         }
     }
 }
