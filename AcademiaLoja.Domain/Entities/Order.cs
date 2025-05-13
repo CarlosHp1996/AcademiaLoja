@@ -8,8 +8,7 @@ namespace AcademiaLoja.Domain.Entities
         public Guid UserId { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
-        public string PaymentStatus { get; set; }
-        public string TrackingNumber { get; set; }
+        public string PaymentStatus { get; set; }        
         public string ShippingAddress { get; set; }
         public DateTime OrderDate { get; set; }
         public DateTime UpdatedAt { get; set; }

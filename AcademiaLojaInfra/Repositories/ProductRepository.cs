@@ -144,8 +144,6 @@ namespace AcademiaLoja.Infra.Repositories
                     .FirstOrDefaultAsync(p => p.Id == product.Id, cancellationToken) ?? throw new Exception($"Product with ID {product.Id} not found.");
 
                 // Atualizar propriedades do produto
-
-
                 existingProduct.Name = request.Name;
                 existingProduct.Description = request.Description;
                 existingProduct.Price = (decimal)request.Price;

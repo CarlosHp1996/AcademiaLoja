@@ -15,7 +15,8 @@ namespace AcademiaLoja.Infra.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
-        public DbSet<Payment> Payments { get; set; }      
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Tracking> Trackings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -84,10 +85,7 @@ namespace AcademiaLoja.Infra.Data
 
                 entity.Property(o => o.PaymentStatus)
                     .IsRequired()
-                    .HasMaxLength(20);
-
-                entity.Property(o => o.TrackingNumber)
-                    .HasMaxLength(50);
+                    .HasMaxLength(20);                
 
                 entity.Property(o => o.ShippingAddress)
                     .IsRequired()
@@ -181,7 +179,33 @@ namespace AcademiaLoja.Infra.Data
 
                 entity.Property(p => p.PaymentDate)
                     .IsRequired();
-            });          
+            });
+
+            // Configuração de Tracking
+            modelBuilder.Entity<Tracking>(entity =>
+            {
+                entity.ToTable("Trackings");
+                entity.HasKey(t => t.Id);
+                entity.Property(o => o.TrackingNumber)
+                    .HasMaxLength(50);
+                entity.Property(t => t.Status)
+                    .IsRequired()
+                    .HasMaxLength(50);
+                entity.Property(t => t.Description)
+                    .HasMaxLength(500);
+                entity.Property(t => t.Location)
+                    .HasMaxLength(100);
+                entity.Property(t => t.EventDate)
+                    .IsRequired();
+                entity.Property(t => t.CreatedAt)
+                    .IsRequired();
+
+                // Relacionamento
+                entity.HasOne(th => th.Order)
+                    .WithMany()
+                    .HasForeignKey(th => th.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

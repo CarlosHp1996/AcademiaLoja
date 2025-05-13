@@ -3,7 +3,7 @@
     public class BaseRequestFilter
     {
         public int Take { get; set; } = 100;
-        public int? Page { get; set; }
+        public int? Page { get; set; } = 1;
         public int? PageSize { get; set; } = 10;
         public int? Offset { get; set; }
         public string? SortingProp { get; set; }
