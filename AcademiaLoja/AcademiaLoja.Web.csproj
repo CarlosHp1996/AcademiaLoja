@@ -37,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Generated\AcademiaLoja\Application\Commands\" />
     <Folder Include="Generated\AcademiaLoja\Application\Interfaces\" />
     <Folder Include="Generated\AcademiaLoja\Application\Models\Filters\" />
     <Folder Include="Generated\AcademiaLoja\Application\Models\Requests\" />

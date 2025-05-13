@@ -41,7 +41,6 @@ namespace AcademiaLoja.Infra.Repositories
                 OrderDate = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 TotalAmount = 0, // Será calculado com base nos itens
-                TrackingNumber = "Pending"
             };
 
             decimal totalAmount = 0;
@@ -211,9 +210,6 @@ namespace AcademiaLoja.Infra.Repositories
 
             if (!string.IsNullOrEmpty(request.PaymentStatus))
                 order.PaymentStatus = request.PaymentStatus;
-
-            if (!string.IsNullOrEmpty(request.TrackingNumber))
-                order.TrackingNumber = request.TrackingNumber;
 
             if (!string.IsNullOrEmpty(request.ShippingAddress))
                 order.ShippingAddress = request.ShippingAddress;

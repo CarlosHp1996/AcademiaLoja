@@ -30,6 +30,7 @@ builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<IFileSystemService, FileSystemService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<ITrackingRepository, TrackingRepository>();
 
 // Add Cors (chamada do frontend)
 builder.Services.AddCors(options =>
