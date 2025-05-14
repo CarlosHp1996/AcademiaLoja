@@ -12,6 +12,8 @@ using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Infra.Repositories;
 using CrudGenerator.Services;
 using CrudGenerator;
+using AcademiaLoja.Application.Services.Interfaces;
+using AcademiaLoja.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +33,10 @@ builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<IFileSystemService, FileSystemService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ITrackingRepository, TrackingRepository>();
+builder.Services.AddScoped<IFileStorageService>(provider =>
+    new FileStorageService(
+        @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"
+    ));
 
 // Add Cors (chamada do frontend)
 builder.Services.AddCors(options =>

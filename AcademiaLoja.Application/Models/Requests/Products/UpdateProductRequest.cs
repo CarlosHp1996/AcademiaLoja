@@ -1,4 +1,5 @@
 ﻿using AcademiaLoja.Application.Models.Dtos;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace AcademiaLoja.Application.Models.Requests.Products
@@ -17,7 +18,7 @@ namespace AcademiaLoja.Application.Models.Requests.Products
         [Range(0, int.MaxValue)]
         public int? StockQuantity { get; set; }
 
-        public string? ImageUrl { get; set; }
+        public IFormFile? ImageUrl { get; set; }
 
         public bool? IsActive { get; set; }
 
