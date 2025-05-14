@@ -3,6 +3,7 @@ using AcademiaLoja.Application.Models.Dtos;
 using AcademiaLoja.Application.Models.Filters;
 using AcademiaLoja.Application.Models.Requests.Products;
 using AcademiaLoja.Application.Models.Responses.Products;
+using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Domain.Enums;
 using AcademiaLoja.Domain.Helpers;
@@ -14,10 +15,12 @@ namespace AcademiaLoja.Infra.Repositories
     public class ProductRepository : BaseRepository<Product>, IProductRepository
     {
         private readonly AppDbContext _context;
+        private readonly IFileStorageService _fileStorage;
 
-        public ProductRepository(AppDbContext dbContext) : base(dbContext)
+        public ProductRepository(AppDbContext dbContext, IFileStorageService fileStorage) : base(dbContext)
         {
             _context = dbContext;
+            _fileStorage = fileStorage;
         }
 
         public async Task<AsyncOutResult<IEnumerable<Product>, int>> Get(GetProductsRequestFilter filter)
@@ -143,12 +146,22 @@ namespace AcademiaLoja.Infra.Repositories
                     .Include(p => p.Inventory)
                     .FirstOrDefaultAsync(p => p.Id == product.Id, cancellationToken) ?? throw new Exception($"Product with ID {product.Id} not found.");
 
+                // Processar upload de imagem (se existir)
+                string? imageUrl = null;
+                if (request.ImageUrl != null && request.ImageUrl.Length > 0)
+                {
+                    imageUrl = await _fileStorage.UploadFileAsync(
+                        request.ImageUrl,
+                        "videos/images",
+                        $"{Guid.NewGuid()}_{request.ImageUrl.FileName}");
+                }
+
                 // Atualizar propriedades do produto
                 existingProduct.Name = request.Name;
                 existingProduct.Description = request.Description;
                 existingProduct.Price = (decimal)request.Price;
                 existingProduct.StockQuantity = (int)request.StockQuantity;
-                existingProduct.ImageUrl = request.ImageUrl;
+                existingProduct.ImageUrl = imageUrl;
                 existingProduct.IsActive = (bool)request.IsActive;
                 existingProduct.UpdatedAt = DateTime.UtcNow;
 
@@ -245,7 +258,17 @@ namespace AcademiaLoja.Infra.Repositories
         public async Task<CreateProductResponse> CreateProduct(CreateProductRequest request, CancellationToken cancellationToken)
         {
             try
-            {               
+            {
+                // Processar upload de imagem (se existir)
+                string? imageUrl = null;
+                if (request.ImageUrl != null && request.ImageUrl.Length > 0)
+                {
+                    imageUrl = await _fileStorage.UploadFileAsync(
+                        request.ImageUrl,
+                        "videos/images",
+                        $"{Guid.NewGuid()}_{request.ImageUrl.FileName}");
+                }
+
                 // Criar o produto
                 var now = DateTime.UtcNow;
                 var product = new Product
@@ -255,7 +278,7 @@ namespace AcademiaLoja.Infra.Repositories
                     Description = request.Description,
                     Price = request.Price,
                     StockQuantity = request.StockQuantity,
-                    ImageUrl = request.ImageUrl,
+                    ImageUrl = imageUrl,
                     IsActive = request.IsActive,
                     CreatedAt = now,
                     UpdatedAt = now
