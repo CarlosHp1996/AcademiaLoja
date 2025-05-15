@@ -14,6 +14,7 @@ using CrudGenerator.Services;
 using CrudGenerator;
 using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Application.Services;
+using AcademiaLoja.Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +22,11 @@ string connectionString = Environment.GetEnvironmentVariable("ACADEMIALOJA_DB_CO
                           builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddScoped<AccessManager>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -39,6 +44,8 @@ builder.Services.AddScoped<IFileStorageService>(provider =>
     new FileStorageService(
         @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"
     ));
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddStripeServices(builder.Configuration); // Configuração do Stripe
 
 // Add Cors (chamada do frontend)
 builder.Services.AddCors(options =>
@@ -164,6 +171,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
+app.UseStripeConfiguration();
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
