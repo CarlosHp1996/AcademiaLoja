@@ -1,5 +1,6 @@
 ﻿using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Services.Interfaces;
+using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -50,7 +51,11 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
                 );
 
                 // Processar diferentes tipos de eventos
-                if (stripeEvent.Type == "payment_intent.succeeded")
+                if (stripeEvent.Type == "payment_intent.created")
+                {
+                    await HandlePaymentIntentCreated(stripeEvent, cancellationToken);
+                }
+                else if (stripeEvent.Type == "payment_intent.succeeded")
                 {
                     await HandlePaymentIntentSucceeded(stripeEvent, cancellationToken);
                 }
@@ -67,7 +72,6 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
                     _logger.LogInformation($"Unhandled event type: {stripeEvent.Type}");
                 }
 
-
                 result.HasSuccess = true;
                 return result;
             }
@@ -83,6 +87,60 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
                 result.WithError($"Error: {e.Message}");
                 return result;
             }
+        }
+
+        private async Task HandlePaymentIntentCreated(Event stripeEvent, CancellationToken cancellationToken)
+        {
+            var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
+            if (paymentIntent == null)
+            {
+                _logger.LogWarning($"Event {stripeEvent.Id}: PaymentIntent is null");
+                return;
+            }
+
+            // Verificar se o orderId está nos valores dos metadados
+            var orderId = paymentIntent.Metadata.Values.FirstOrDefault(v => Guid.TryParse(v, out _));
+            if (string.IsNullOrEmpty(orderId))
+            {
+                _logger.LogWarning($"Event {stripeEvent.Id}: PaymentIntent {paymentIntent.Id} missing orderId in metadata values");
+                return;
+            }
+
+            // Transformar string em Guid  
+            if (!Guid.TryParse(orderId, out var orderGuid))
+            {
+                _logger.LogWarning($"Event {stripeEvent.Id}: Invalid orderId format in PaymentIntent {paymentIntent.Id}");
+                return;
+            }
+
+            // Verifica se o pedido existe  
+            var order = await _orderRepository.GetById(orderGuid, cancellationToken);
+            if (order is null)
+            {
+                _logger.LogWarning($"Event {stripeEvent.Id}: Order {orderGuid} not found for PaymentIntent {paymentIntent.Id}");
+                return;
+            }
+
+            // Verifica se o pagamento já existe
+            var existingPayment = await _paymentRepository.GetByTransactionIdAsync(paymentIntent.Id, cancellationToken);
+            if (existingPayment is null)
+            {
+                _logger.LogWarning($"Event {stripeEvent.Id}: PaymentIntent {paymentIntent.Id} already exists");
+                return;
+            }
+
+            //Atualizar pagamento
+            existingPayment.TransactionId = paymentIntent.Id;
+            existingPayment.OrderId = orderGuid;
+            existingPayment.Status = "created";
+            existingPayment.PaymentMethod = "stripe";
+            existingPayment.Amount = paymentIntent.Amount / 100m; // Convert from cents to decimal value
+            existingPayment.Currency = paymentIntent.Currency;
+            existingPayment.UpdatedAt = DateTime.UtcNow;       
+
+            // Save the payment to the database
+            await _paymentRepository.UpdateAsync(existingPayment);
+            _logger.LogInformation($"PaymentIntent {paymentIntent.Id} created for Order {orderId}");
         }
 
         private async Task HandlePaymentIntentSucceeded(Event stripeEvent, CancellationToken cancellationToken)

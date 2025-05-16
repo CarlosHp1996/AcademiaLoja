@@ -13,6 +13,7 @@
         public string? ReceiptUrl { get; set; } // Payment receipt URL (provided by payment provider)
         public string? ErrorMessage { get; set; } // Store error messages if payment fails
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public DateTime? ProcessedAt { get; set; } // When payment was processed
         public DateTime PaymentDate { get; set; }
 

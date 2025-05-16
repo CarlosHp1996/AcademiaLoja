@@ -21,12 +21,12 @@ namespace AcademiaLoja.Infra.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
-        public async Task<IEnumerable<Payment>> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken = default)
+        public async Task<Payment> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken = default)
         {
             return await _context.Payments
                 .Where(p => p.OrderId == orderId)
                 .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<Payment> GetByTransactionIdAsync(string transactionId, CancellationToken cancellationToken = default)
