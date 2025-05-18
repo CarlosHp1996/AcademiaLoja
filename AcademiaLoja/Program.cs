@@ -1,20 +1,21 @@
+using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Application.Services;
+using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Domain.Entities.Security;
+using AcademiaLoja.Domain.Security;
 using AcademiaLoja.Infra.Data;
+using AcademiaLoja.Infra.Repositories;
+using AcademiaLoja.Web.Configuration;
+using CrudGenerator;
+using CrudGenerator.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using AcademiaLoja.Domain.Security;
-using AcademiaLoja.Application.Interfaces;
-using AcademiaLoja.Infra.Repositories;
-using CrudGenerator.Services;
-using CrudGenerator;
-using AcademiaLoja.Application.Services.Interfaces;
-using AcademiaLoja.Application.Services;
-using AcademiaLoja.Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,13 +85,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     .AddDefaultTokenProviders();
 
 // Load JWT keys from environment variables
-var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY_ACADEMIA");
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 
 if (string.IsNullOrEmpty(jwtKey))
 {
-    throw new InvalidOperationException("The JWT key has not been set. Set the environment variable 'JWT_KEY_ACADEMIA'.");
+    throw new InvalidOperationException("The JWT key has not been set. Set the environment variable 'JWT_KEY'.");    
 }
 
 // Authentication and JWT Configuration
@@ -112,15 +113,24 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var accessManager = context.HttpContext.RequestServices.GetRequiredService<AccessManager>();
+            var token = context.SecurityToken as JwtSecurityToken;
+            if (token != null && AccessManager.IsTokenBlacklisted(token.RawData))
+            {
+                context.Fail("Este token foi invalidado.");
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
-// Activates the use of the token as a way of authorizing access to resources in this project
-builder.Services.AddAuthorization(auth =>
-{
-    auth.AddPolicy("Bearer", new AuthorizationPolicyBuilder()
-        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-        .RequireAuthenticatedUser().Build());
-});
+// Authorization
+builder.Services.AddAuthorization();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -158,6 +168,40 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Seed Roles and Admin User
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+
+    // Criar roles
+    string[] roleNames = { "User", "Admin" };
+    foreach (var roleName in roleNames)
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+        {
+            await roleManager.CreateAsync(new IdentityRole<Guid> { Name = roleName });
+        }
+    }
+
+    // Criar usuário Admin
+    var adminUser = await userManager.FindByEmailAsync("carloshpsantos1996@gmail.com");
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser { UserName = "CarlosAdmin", Email = "carloshpsantos1996@gmail.com" };
+        await userManager.CreateAsync(adminUser, "@Caique123");
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"),
+    RequestPath = "" // Sem prefixo, para que /videos/images/{fileName} funcione diretamente
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
