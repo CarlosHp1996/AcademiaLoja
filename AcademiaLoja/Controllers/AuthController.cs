@@ -12,7 +12,6 @@ namespace AcademiaLoja.Web.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -59,7 +58,7 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Logs out the user and invalidates the JWT token.")]
         [SwaggerResponse(200, "Sucesso", typeof(Result<CreateLogoutResponse>))]
         [HttpPost("logout")]
-        //[Authorize(Roles = "Usuario,Admin")]
+        [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> Logout([FromBody] CreateLogoutRequest request)
         {
             var command = new CreateLogoutCommand(request);
@@ -76,6 +75,7 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Update existing user information.")]
         [SwaggerResponse(200, "Success", typeof(Result<UpdateUserResponse>))]
         [HttpPut("update")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update([FromBody] UpdateUserRequest request)
         {
             var command = new UpdateUserCommand(request);
@@ -92,6 +92,7 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Retrieve a specific user by ID.")]
         [SwaggerResponse(200, "Success", typeof(Result<GetUserByIdResponse>))]
         [HttpGet("get/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var query = new GetUserByIdQuery(id);
@@ -108,6 +109,7 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Retrieve all users with optional filtering and pagination.")]
         [SwaggerResponse(200, "Success", typeof(Result<GetAllUsersResponse>))]
         [HttpGet("get")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllUsersRequest request)
         {
             var query = new GetAllUsersQuery(request);
@@ -124,6 +126,7 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Delete a user by ID.")]
         [SwaggerResponse(200, "Success", typeof(Result<DeleteUserResponse>))]
         [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var command = new DeleteUserCommand(id);
