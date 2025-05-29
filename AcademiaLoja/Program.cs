@@ -53,7 +53,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://127.0.0.1:5501") // Apenas a origem, sem o caminho
+        policy.WithOrigins("http://127.0.0.1:5502") // Apenas a origem, sem o caminho
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

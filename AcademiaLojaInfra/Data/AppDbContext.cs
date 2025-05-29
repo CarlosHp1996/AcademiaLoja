@@ -133,14 +133,6 @@ namespace AcademiaLoja.Infra.Data
             {
                 entity.ToTable("ProductAttributes");
                 entity.HasKey(pa => pa.Id);
-
-                entity.Property(pa => pa.Key)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(pa => pa.Value)
-                    .IsRequired()
-                    .HasMaxLength(500);
             });
 
             // Configuração de Inventory

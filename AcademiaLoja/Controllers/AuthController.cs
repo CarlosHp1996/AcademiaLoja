@@ -92,7 +92,6 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Retrieve a specific user by ID.")]
         [SwaggerResponse(200, "Success", typeof(Result<GetUserByIdResponse>))]
         [HttpGet("get/{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var query = new GetUserByIdQuery(id);

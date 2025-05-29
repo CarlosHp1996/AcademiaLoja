@@ -194,8 +194,6 @@ namespace AcademiaLoja.Infra.Repositories
                         var productAttribute = new ProductAttribute
                         {
                             ProductId = product.Id,
-                            Key = attr.Key,
-                            Value = attr.Value,
                             Flavor = attr.Flavor,
                             Brand = attr.Brand,
                             Category = attr.Category,
@@ -225,8 +223,6 @@ namespace AcademiaLoja.Infra.Repositories
                     Attributes = product.Attributes
                         .Select(a => new ProductAttributeDto
                         {
-                            Key = GetAttributeTypeName(a),
-                            Value = GetAttributeValue(a),
                             Flavor = a.Flavor,
                             Brand = a.Brand,
                             Category = a.Category,
@@ -305,8 +301,6 @@ namespace AcademiaLoja.Infra.Repositories
                     {
                         Id = Guid.NewGuid(),
                         ProductId = product.Id,
-                        Key = attr.Key,
-                        Value = attr.Value,
                         Flavor = attr.Flavor,
                         Brand = attr.Brand,
                         Category = attr.Category,
@@ -336,8 +330,6 @@ namespace AcademiaLoja.Infra.Repositories
                     Attributes = productAttributes.Select(a => new ProductAttributeDto
                     {
                         Id = a.Id,
-                        Key = GetAttributeTypeName(a),
-                        Value = GetAttributeValue(a),
                         Flavor = a.Flavor,
                         Brand = a.Brand,
                         Category = a.Category,
@@ -353,27 +345,6 @@ namespace AcademiaLoja.Infra.Repositories
             {
                 throw new Exception($"Error creating product: {ex.Message}", ex);
             }
-        }
-
-        // Métodos auxiliares para lidar com os atributos
-        private string GetAttributeTypeName(ProductAttribute attribute)
-        {
-            if (attribute.Flavor.HasValue) return "Flavor";
-            if (attribute.Brand.HasValue) return "Brand";
-            if (attribute.Category.HasValue) return "Category";
-            if (attribute.Objective.HasValue) return "Objective";
-            if (attribute.Accessory.HasValue) return "Accessory";
-            return attribute.Key; // Fallback para atributos customizados
-        }
-
-        private string GetAttributeValue(ProductAttribute attribute)
-        {
-            if (attribute.Flavor.HasValue) return attribute.Flavor.Value.ToString();
-            if (attribute.Brand.HasValue) return attribute.Brand.Value.ToString();
-            if (attribute.Category.HasValue) return attribute.Category.Value.ToString();
-            if (attribute.Objective.HasValue) return attribute.Objective.Value.ToString();
-            if (attribute.Accessory.HasValue) return attribute.Accessory.Value.ToString();
-            return attribute.Value; // Fallback para atributos customizados
-        }
+        }       
     }
 }
