@@ -6,8 +6,6 @@ namespace AcademiaLoja.Domain.Entities
     {
         public Guid Id { get;  set; }
         public Guid ProductId { get;  set; }
-        public string? Key { get;  set; }
-        public string? Value { get;  set; }
         public EnumFlavor? Flavor { get; set; }
         public EnumBrand? Brand { get; set; }
         public EnumAccessory? Accessory { get; set; }

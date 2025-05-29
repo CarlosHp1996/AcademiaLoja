@@ -43,9 +43,7 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                         IsActive = p.IsActive,                       
                         Attributes = p.Attributes?
                             .Select(a => new ProductAttributeDto
-                            {
-                                Key = a.Key,
-                                Value = a.Value,
+                            {                                
                                 Accessory = a.Accessory,
                                 Brand = a.Brand,
                                 Category = a.Category,

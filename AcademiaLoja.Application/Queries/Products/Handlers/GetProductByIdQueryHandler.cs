@@ -45,9 +45,7 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                     Attributes = product.Attributes
                         .Select(a => new ProductAttributeDto
                         {
-                            Id = a.Id,
-                            Key = a.Key,
-                            Value = a.Value,
+                            Id = a.Id,                           
                             Accessory = a.Accessory,
                             Brand = a.Brand,
                             Category = a.Category,

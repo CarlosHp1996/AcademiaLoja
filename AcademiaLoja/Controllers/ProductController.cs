@@ -26,7 +26,7 @@ namespace AcademiaLoja.Web.Controllers
               Description = "Create a new product.")]
         [SwaggerResponse(200, "Success", typeof(Result<CreateProductResponse>))]
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
+        public async Task<IActionResult> Create([FromForm] CreateProductRequest request)
         {
             var command = new CreateProductCommand(request);
             var result = await _mediator.Send(command);
