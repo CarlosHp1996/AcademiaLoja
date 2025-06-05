@@ -45,6 +45,8 @@ builder.Services.AddScoped<IFileStorageService>(provider =>
     new FileStorageService(
         @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"
     ));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddStripeServices(builder.Configuration); // Configuração do Stripe
 
