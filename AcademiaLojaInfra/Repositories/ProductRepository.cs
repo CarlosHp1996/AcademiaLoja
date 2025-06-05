@@ -16,11 +16,13 @@ namespace AcademiaLoja.Infra.Repositories
     {
         private readonly AppDbContext _context;
         private readonly IFileStorageService _fileStorage;
+        private readonly IUrlHelperService _urlHelper;
 
-        public ProductRepository(AppDbContext dbContext, IFileStorageService fileStorage) : base(dbContext)
+        public ProductRepository(AppDbContext dbContext, IFileStorageService fileStorage, IUrlHelperService urlHelper) : base(dbContext)
         {
             _context = dbContext;
             _fileStorage = fileStorage;
+            _urlHelper = urlHelper;
         }
 
         public async Task<AsyncOutResult<IEnumerable<Product>, int>> Get(GetProductsRequestFilter filter)
@@ -78,6 +80,12 @@ namespace AcademiaLoja.Infra.Repositories
 
             var totalCount = await query.CountAsync();
             var products = await query.Skip(offset).Take(pageSize).ToListAsync();
+
+            // Converter caminhos para URLs completas
+            foreach (var product in products)
+            {
+                product.ImageUrl = _urlHelper.GenerateImageUrl(product.ImageUrl);
+            }
 
             return new AsyncOutResult<IEnumerable<Product>, int>(products, totalCount);
         }
@@ -241,14 +249,19 @@ namespace AcademiaLoja.Infra.Repositories
 
         public async Task<Product> GetProductById(Guid id)
         {
-            var product = _context.Products
-                .Where(x => x.Id == id)
-                .Include(p => p.Attributes)                
-                .Include(p => p.Inventory)
-                .Include(p => p.OrderItems)
-                .AsQueryable();
+            var product = await _context.Products
+            .Where(x => x.Id == id)
+            .Include(p => p.Attributes)
+            .Include(p => p.Inventory)
+            .Include(p => p.OrderItems)
+            .FirstOrDefaultAsync();
 
-            return await product.FirstOrDefaultAsync();
+            if (product != null)
+            {
+                product.ImageUrl = _urlHelper.GenerateImageUrl(product.ImageUrl);
+            }
+
+            return product;
         }
 
         public async Task<CreateProductResponse> CreateProduct(CreateProductRequest request, CancellationToken cancellationToken)

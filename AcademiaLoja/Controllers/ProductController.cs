@@ -74,7 +74,7 @@ namespace AcademiaLoja.Web.Controllers
             Description = "Update an existing product.")]
         [SwaggerResponse(200, "Success", typeof(Result<UpdateProductResponse>))]
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request)
+        public async Task<IActionResult> Update(Guid id, [FromForm] UpdateProductRequest request)
         {
             var command = new UpdateProductCommand(id, request);
             var result = await _mediator.Send(command);

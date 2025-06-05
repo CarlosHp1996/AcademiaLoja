@@ -26,6 +26,6 @@ namespace AcademiaLoja.Application.Models.Requests.Products
         public bool IsActive { get; set; } = true;
 
         // Atributos do produto (sabor, marca, etc.)
-        public List<ProductAttributeRequest> Attributes { get; set; } = new List<ProductAttributeRequest>();
+        public List<ProductAttributeRequest>? Attributes { get; set; } = new List<ProductAttributeRequest>();
     }
 }

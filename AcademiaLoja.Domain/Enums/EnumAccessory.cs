@@ -11,5 +11,6 @@
         Meias = 7,
         Mochilas = 8,
         Bonés = 9,
+        Nenhum = 10,
     }
 }

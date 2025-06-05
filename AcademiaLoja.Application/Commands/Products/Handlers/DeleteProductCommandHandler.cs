@@ -26,6 +26,12 @@ namespace AcademiaLoja.Application.Commands.Products.Handlers
                     return result;
                 }
 
+                if (product.OrderItems.Count > 0)
+                {
+                    result.WithNotFound("The product cannot be deleted because there is already an order created for it!");
+                    return result;
+                }
+
                 await _productRepository.DeleteAsync(product);
 
                 result.Message = "Product deleted successfully!";
