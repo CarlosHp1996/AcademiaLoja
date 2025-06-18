@@ -5,12 +5,9 @@
         Chocolate = 1,
         Morango = 2,
         Baunilha = 3,
-        Coco = 4,
+        Cookies = 4,
         Limão = 5,
         FrutasVermelhas = 6,
-        DoceDeLeite = 7,
-        Pistache = 8,
-        Café = 9,
-        Caramelo = 10
+        SemSabor = 7,
     }
 }

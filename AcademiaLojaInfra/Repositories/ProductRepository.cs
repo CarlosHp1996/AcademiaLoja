@@ -46,15 +46,22 @@ namespace AcademiaLoja.Infra.Repositories
             // Filtro por sabor usando o novo campo Flavor do enum
             if (filter.Flavors != null && filter.Flavors.Any())
             {
-                var flavorValues = filter.Flavors.Select(f => Enum.Parse<EnumFlavor>(f)).ToList();
+                var flavorValues = filter.Flavors.Select(f => f).ToList();
                 query = query.Where(p => p.Attributes.Any(a => a.Flavor != null && flavorValues.Contains(a.Flavor.Value)));
+            }
+
+            // Filtro por categoria usando o novo campo Flavor do enum
+            if (filter.CategoryIds != null && filter.CategoryIds.Any())
+            {
+                var categoryValues = filter.CategoryIds.Select(f => f).ToList();
+                query = query.Where(p => p.Attributes.Any(a => a.Category != null && categoryValues.Contains(a.Category.Value)));
             }
 
             // Filtro por marca usando o novo campo Brand do enum
             if (filter.BrandIds != null && filter.BrandIds.Any())
             {
-                var brandValues = filter.BrandIds.Select(b => Enum.Parse<EnumBrand>(b)).ToList();
-                query = query.Where(p => p.Attributes.Any(a => a.Brand != null && brandValues.Contains(a.Brand.Value)));
+                var brandValues = filter.BrandIds.Select(g => g).ToList();
+                query = query.Where(p => p.Attributes.Any(b => b.Brand != null && brandValues.Contains(b.Brand.Value)));
             }
 
             if (filter.QuantityRanges != null && filter.QuantityRanges.Any())
