@@ -11,6 +11,7 @@
         MelhoraDeDesempenho = 7,
         MelhoraDeSaude = 8,
         MelhoraDeRecuperacao = 9,
-        MelhoraDeImunidade = 10
+        MelhoraDeImunidade = 10,
+        SaudeEBemEstar = 11,
     }
 }
