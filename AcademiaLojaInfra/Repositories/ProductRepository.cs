@@ -92,6 +92,7 @@ namespace AcademiaLoja.Infra.Repositories
             foreach (var product in products)
             {
                 product.ImageUrl = _urlHelper.GenerateImageUrl(product.ImageUrl);
+                product.NutritionalInfo = _urlHelper.GenerateImageUrl(product.NutritionalInfo);
             }
 
             return new AsyncOutResult<IEnumerable<Product>, int>(products, totalCount);
@@ -171,14 +172,35 @@ namespace AcademiaLoja.Infra.Repositories
                         $"{Guid.NewGuid()}_{request.ImageUrl.FileName}");
                 }
 
+                // Processar upload de informação nutricional (se existir)
+                string? nutritionalInfo = null;
+                if (request.NutritionalInfo != null && request.NutritionalInfo.Length > 0)
+                {
+                    nutritionalInfo = await _fileStorage.UploadFileAsync(
+                        request.NutritionalInfo,
+                        "videos/images",
+                        $"{Guid.NewGuid()}_{request.NutritionalInfo.FileName}");
+                }
+
                 // Atualizar propriedades do produto
-                existingProduct.Name = request.Name;
-                existingProduct.Description = request.Description;
-                existingProduct.Price = (decimal)request.Price;
-                existingProduct.StockQuantity = (int)request.StockQuantity;
-                existingProduct.ImageUrl = imageUrl;
-                existingProduct.IsActive = (bool)request.IsActive;
+
+                if (request.Name != null)
+                    existingProduct.Name = request.Name;
+                if (request.Description != null)
+                    existingProduct.Description = request.Description;
+                if (request.Price is not null)
+                    existingProduct.Price = (decimal)request.Price;
+                if (request.StockQuantity is not null)
+                    existingProduct.StockQuantity = (int)request.StockQuantity;
+                if (imageUrl != null)
+                    existingProduct.ImageUrl = imageUrl;
+                if(request.IsActive is not null)
+                    existingProduct.IsActive = (bool)request.IsActive;
                 existingProduct.UpdatedAt = DateTime.UtcNow;
+                if (request.Benefit is not null)
+                    existingProduct.Benefit = request.Benefit;
+                if (nutritionalInfo is not null)
+                    existingProduct.NutritionalInfo = nutritionalInfo;
 
                 // Atualizar estoque no inventário
                 if (request.InventoryId is not null)
@@ -232,6 +254,8 @@ namespace AcademiaLoja.Infra.Repositories
                     Price = product.Price,
                     StockQuantity = product.StockQuantity,
                     ImageUrl = product.ImageUrl,
+                    Benefit = product.Benefit,
+                    NutritionalInfo = product.NutritionalInfo,
                     IsActive = product.IsActive,
                     UpdatedAt = product.UpdatedAt,
                     InventoryId = product.Inventory.Id,                   
@@ -266,6 +290,7 @@ namespace AcademiaLoja.Infra.Repositories
             if (product != null)
             {
                 product.ImageUrl = _urlHelper.GenerateImageUrl(product.ImageUrl);
+                product.NutritionalInfo = _urlHelper.GenerateImageUrl(product.NutritionalInfo);
             }
 
             return product;
@@ -285,6 +310,16 @@ namespace AcademiaLoja.Infra.Repositories
                         $"{Guid.NewGuid()}_{request.ImageUrl.FileName}");
                 }
 
+                // Processar upload de informação nutricional (se existir)
+                string? nutritionalInfo = null;
+                if (request.NutritionalInfo != null && request.NutritionalInfo.Length > 0)
+                {
+                    nutritionalInfo = await _fileStorage.UploadFileAsync(
+                        request.NutritionalInfo,
+                        "videos/images",
+                        $"{Guid.NewGuid()}_{request.NutritionalInfo.FileName}");
+                }
+
                 // Criar o produto
                 var now = DateTime.UtcNow;
                 var product = new Product
@@ -297,7 +332,9 @@ namespace AcademiaLoja.Infra.Repositories
                     ImageUrl = imageUrl,
                     IsActive = request.IsActive,
                     CreatedAt = now,
-                    UpdatedAt = now
+                    UpdatedAt = now,
+                    Benefit = request.Benefit,
+                    NutritionalInfo = nutritionalInfo
                 };
 
                 // Adicionar o produto ao contexto
@@ -346,7 +383,9 @@ namespace AcademiaLoja.Infra.Repositories
                     ImageUrl = product.ImageUrl,
                     IsActive = product.IsActive,
                     CreatedAt = product.CreatedAt,
-                    UpdatedAt = product.UpdatedAt,                   
+                    UpdatedAt = product.UpdatedAt,
+                    NutritionalInfo = product.NutritionalInfo,
+                    Benefit = product.Benefit,
                     Attributes = productAttributes.Select(a => new ProductAttributeDto
                     {
                         Id = a.Id,

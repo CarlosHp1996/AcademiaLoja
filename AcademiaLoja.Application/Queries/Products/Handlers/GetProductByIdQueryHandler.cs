@@ -39,6 +39,8 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                     Price = product.Price,
                     StockQuantity = product.StockQuantity,
                     ImageUrl = product.ImageUrl,
+                    Benefit = product.Benefit,
+                    NutritionalInfo = product.NutritionalInfo,
                     IsActive = product.IsActive,
                     CreatedAt = product.CreatedAt,
                     UpdatedAt = product.UpdatedAt,                    

@@ -40,6 +40,8 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
                         Price = p.Price,
                         StockQuantity = p.StockQuantity,
                         ImageUrl = p.ImageUrl,
+                        Benefit = p.Benefit,
+                        NutritionalInfo = p.NutritionalInfo,
                         IsActive = p.IsActive,                       
                         Attributes = p.Attributes?
                             .Select(a => new ProductAttributeDto

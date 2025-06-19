@@ -9,17 +9,14 @@ namespace AcademiaLoja.Application.Models.Requests.Products
 
         [StringLength(100)]
         public string? Name { get; set; }
-
         public string? Description { get; set; }
-
         [Range(0.01, double.MaxValue)]
         public decimal? Price { get; set; }
-
         [Range(0, int.MaxValue)]
         public int? StockQuantity { get; set; }
-
         public IFormFile? ImageUrl { get; set; }
-
+        public string? Benefit { get; set; }
+        public IFormFile? NutritionalInfo { get; set; }
         public bool? IsActive { get; set; }
 
         // Atributos do produto (sabor, marca, etc.)
