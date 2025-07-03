@@ -22,7 +22,7 @@ namespace AcademiaLoja.Domain.Helpers
         public bool HasSuccess { get; set; }
         public bool HasError => !HasSuccess;
         public string Message { get; set; }
-        public IList<string> Errors { get; }
+        public IList<string> Errors { get; set; }
         public HttpStatusCode HttpStatusCode { get; set; }
         public DateTime DataRequisicao { get; set; }
 

@@ -50,6 +50,20 @@ namespace AcademiaLoja.Infra.Repositories
                 query = query.Where(p => p.Attributes.Any(a => a.Flavor != null && flavorValues.Contains(a.Flavor.Value)));
             }
 
+            // Filtro por sabor usando o novo campo Objective do enum
+            if (filter.ObjectiveIds != null && filter.ObjectiveIds.Any())
+            {
+                var objectiveValues = filter.ObjectiveIds.Select(f => f).ToList();
+                query = query.Where(p => p.Attributes.Any(a => a.Flavor != null && objectiveValues.Contains(a.Objective.Value)));
+            }
+
+            // Filtro por sabor usando o novo campo Accessory do enum
+            if (filter.AccessoryIds != null && filter.AccessoryIds.Any())
+            {
+                var accessoryValues = filter.AccessoryIds.Select(f => f).ToList();
+                query = query.Where(p => p.Attributes.Any(a => a.Flavor != null && accessoryValues.Contains(a.Accessory.Value)));
+            }
+
             // Filtro por categoria usando o novo campo Flavor do enum
             if (filter.CategoryIds != null && filter.CategoryIds.Any())
             {
