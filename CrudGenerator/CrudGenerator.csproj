@@ -9,9 +9,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
 		<PackageReference Include="Resend" Version="0.1.2" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.41" />
 	</ItemGroup>
 
 	<ItemGroup>
