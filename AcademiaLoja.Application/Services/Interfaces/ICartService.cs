@@ -1,4 +1,5 @@
 ﻿using AcademiaLoja.Domain.Entities;
+using AcademiaLoja.Application.Models.Requests.Orders;
 
 namespace AcademiaLoja.Application.Services.Interfaces
 {
@@ -9,8 +10,9 @@ namespace AcademiaLoja.Application.Services.Interfaces
         Task<Cart> UpdateItemQuantityAsync(string userId, Guid productId, int quantity);
         Task<Cart> RemoveItemAsync(string userId, Guid productId);
         Task<bool> ClearCartAsync(string userId);
-        Task<int> GetCartItemCountAsync(string userId);
-        Task<Guid> ConvertCartToOrderAsync(string userId, string shippingAddress);
+        Task<int> GetCartItemCountAsync(string userId);      
+
+        Task<Guid> ConvertCartToOrderAsync(string userId, AddressRequest shippingAddress);
         Task<Cart> MigrateSessionCartToUserAsync(string sessionCartId, string userId);
     }
 }

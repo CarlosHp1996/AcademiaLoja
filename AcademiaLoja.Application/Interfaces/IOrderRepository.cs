@@ -7,9 +7,10 @@ namespace AcademiaLoja.Application.Interfaces
 {
     public interface IOrderRepository : IBaseRepository<Order>
     {
-        Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request, CancellationToken cancellationToken);
+        Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request, CancellationToken cancellationToken);        
 
-        // Read
+        Task<IEnumerable<Order>> GetPendingOrders(TimeSpan pendingTime);
+
         Task<(IQueryable<Order> Result, int TotalCount)> Get(GetOrdersRequestFilter filter);
         Task<Order> GetById(Guid id, CancellationToken cancellationToken);
         // Update

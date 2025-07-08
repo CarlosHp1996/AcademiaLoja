@@ -29,7 +29,7 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
             try
             {
                 // Get the order
-                var order = await _orderRepository.GetById(request.OrderId, cancellationToken);
+                var order = await _orderRepository.GetById(request.OrderId);
                 if (order == null)
                 {
                     result.WithError("Order not found");
@@ -50,7 +50,8 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
                         OrderId = existingPayment.OrderId,
                         Amount = existingPayment.Amount,
                         ClientSecret = existingPayment.ClientSecret,
-                        Status = existingPayment.Status
+                        Status = existingPayment.Status,
+                        TransactionId = existingPayment.TransactionId
                     };
                     return result;
                 }
@@ -76,7 +77,8 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
                     OrderId = payment.OrderId,
                     Amount = payment.Amount,
                     ClientSecret = payment.ClientSecret,
-                    Status = payment.Status
+                    Status = payment.Status,
+                    TransactionId = payment.TransactionId
                 };
 
                 result.Value = response;

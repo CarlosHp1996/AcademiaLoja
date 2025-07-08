@@ -25,63 +25,74 @@ namespace AcademiaLoja.Application.Queries.Payments.Handlers
 
             try
             {
-                // Get payment from database
                 var payment = await _paymentRepository.GetByIdWithDetailsAsync(request.PaymentId, cancellationToken);
 
                 if (payment == null)
                 {
-                    result.WithError("Payment not found");
+                    result.WithError("Pagamento não encontrado.");
                     return result;
                 }
 
-                // If payment is still pending and has a transaction ID, check status with Stripe
+                // Se o pagamento já foi bem-sucedido, retorne sucesso imediatamente.
+                if (payment.Status == "succeeded")
+                {
+                    result.Value = CreateResponse(payment);
+                    result.HasSuccess = true;
+                    return result;
+                }
+
+                // Se o pagamento está pendente e tem um ID de transação, verifique com o Stripe.
                 if (payment.Status == "pending" && !string.IsNullOrEmpty(payment.TransactionId))
                 {
                     var isConfirmed = await _paymentService.VerifyPaymentAsync(payment.TransactionId, cancellationToken);
 
-                    if (isConfirmed && payment.Status != "succeeded")
+                    if (isConfirmed)
                     {
-                        // Update payment status in database
                         payment.Status = "succeeded";
                         payment.ProcessedAt = DateTime.UtcNow;
-                        await _paymentRepository.UpdateAsync(payment);
+                        payment.Order.PaymentStatus = "Paid";
+                        payment.Order.Status = "Processing";
+                        payment.Order.UpdatedAt = DateTime.UtcNow;
 
-                        // Update order status if needed
-                        if (payment.Order.PaymentStatus != "Paid")
-                        {
-                            payment.Order.PaymentStatus = "Paid";
-                            if (payment.Order.Status == "Pending")
-                            {
-                                payment.Order.Status = "Processing";
-                            }
-                            payment.Order.UpdatedAt = DateTime.UtcNow;
-                            // Order will be updated through EF tracking
-                        }
+                        await _paymentRepository.UpdateAsync(payment);
+                    }
+                    else
+                    {
+                        // Se não foi confirmado ainda, retorne o status atual sem erro.
+                        result.WithError("O pagamento ainda está pendente de confirmação.");
+                        return result;
                     }
                 }
-
-                // Return response with current payment status
-                var response = new VerifyPaymentResponse
+                else if (string.IsNullOrEmpty(payment.TransactionId))
                 {
-                    PaymentId = payment.Id,
-                    OrderId = payment.OrderId,
-                    Amount = payment.Amount,
-                    Status = payment.Status,
-                    PaymentMethod = payment.PaymentMethod,
-                    ProcessedAt = payment.ProcessedAt,
-                    ReceiptUrl = payment.ReceiptUrl
-                };
+                    result.WithError("ID de transação não encontrado para este pagamento.");
+                    return result;
+                }
 
-                result.Value = response;
-                result.Count = 1;
+                result.Value = CreateResponse(payment);
                 result.HasSuccess = true;
                 return result;
             }
             catch (Exception ex)
             {
-                result.WithError($"Error verifying payment: {ex.Message}");
+                // Em caso de exceção, retorne um erro claro.
+                result.WithError($"Erro ao verificar o pagamento: {ex.Message}");
                 return result;
             }
+        }
+
+        private VerifyPaymentResponse CreateResponse(Domain.Entities.Payment payment)
+        {
+            return new VerifyPaymentResponse
+            {
+                PaymentId = payment.Id,
+                OrderId = payment.OrderId,
+                Amount = payment.Amount,
+                Status = payment.Status,
+                PaymentMethod = payment.PaymentMethod,
+                ProcessedAt = payment.ProcessedAt,
+                ReceiptUrl = payment.ReceiptUrl
+            };
         }
     }
 }

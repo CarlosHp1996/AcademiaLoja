@@ -7,5 +7,6 @@
         public decimal Amount { get; set; }
         public string ClientSecret { get; set; } // For Stripe frontend integration
         public string Status { get; set; }
+        public string TransactionId { get; set; }
     }
 }

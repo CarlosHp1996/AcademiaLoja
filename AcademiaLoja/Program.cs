@@ -79,6 +79,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddStripeServices(builder.Configuration);
+//builder.Services.AddHostedService<PendingOrderCancellationService>();
 
 // Add Cors (chamada do frontend)
 builder.Services.AddCors(options =>

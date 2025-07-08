@@ -1,6 +1,7 @@
-﻿using AcademiaLoja.Application.Services.Interfaces;
+﻿using AcademiaLoja.Application.Models.Requests.Carts;
+using AcademiaLoja.Application.Models.Requests.Orders;
+using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Domain.Entities;
-using AcademiaLoja.Domain.Enums;
 using AcademiaLoja.Domain.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ namespace AcademiaLoja.Web.Controllers
         private string GetUserId()
         {
             // Tentar pegar o ID do usuário logado
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue("id");
 
             // Se não estiver logado, usar um ID de sessão persistente
             if (string.IsNullOrEmpty(userId))
@@ -152,7 +153,7 @@ namespace AcademiaLoja.Web.Controllers
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized();
 
@@ -187,16 +188,16 @@ namespace AcademiaLoja.Web.Controllers
         [SwaggerOperation(Summary = "Convert cart to order", Description = "Create order from cart items")]
         [SwaggerResponse(200, "Success", typeof(Result<object>))]
         [HttpPost("checkout")]
-        [Authorize] // Requer autenticação para checkout
-        public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> Checkout([FromBody] AddressRequest request)
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized();
 
-                var orderId = await _cartService.ConvertCartToOrderAsync(userId, request.ShippingAddress);
+                var orderId = await _cartService.ConvertCartToOrderAsync(userId, request);
                 return Ok(new Result<object> { Value = orderId, HasSuccess = true });
             }
             catch (Exception ex)
@@ -204,29 +205,5 @@ namespace AcademiaLoja.Web.Controllers
                 return BadRequest(new Result<object> { HasSuccess = false, Errors = new[] { ex.Message } });
             }
         }
-    }
-
-    public class AddToCartRequest
-    {
-        public Guid ProductId { get; set; }
-        public int Quantity { get; set; }
-        public EnumFlavor? Flavor { get; set; }
-        public string? Size { get; set; }
-        //public string SessionId { get; set; }
-    }
-
-    public class UpdateCartItemRequest
-    {
-        public int Quantity { get; set; }
-    }
-
-    public class CheckoutRequest
-    {
-        public string ShippingAddress { get; set; }
-    }
-
-    public class MigrateCartRequest
-    {
-        public string SessionId { get; set; }
-    }
+    }    
 }

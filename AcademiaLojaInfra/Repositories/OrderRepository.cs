@@ -21,12 +21,12 @@ namespace AcademiaLoja.Infra.Repositories
 
         public async Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request, CancellationToken cancellationToken)
         {
-            // Verificar se o usuário existe
+            // Verificar se o usuï¿½rio existe
             var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
             if (user == null)
                 throw new Exception("User not found");
 
-            // Verificar se há pelo menos um item no pedido
+            // Verificar se hï¿½ pelo menos um item no pedido
             if (request.Items == null || !request.Items.Any())
                 throw new Exception("An order must have at least one item");
 
@@ -40,7 +40,7 @@ namespace AcademiaLoja.Infra.Repositories
                 ShippingAddress = request.ShippingAddress,
                 OrderDate = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                TotalAmount = 0, // Será calculado com base nos itens
+                TotalAmount = 0, // Serï¿½ calculado com base nos itens
             };
 
             decimal totalAmount = 0;
@@ -139,10 +139,10 @@ namespace AcademiaLoja.Infra.Repositories
             if (filter.MaxAmount.HasValue)
                 query = query.Where(o => o.TotalAmount <= filter.MaxAmount.Value);
 
-            // Contagem total de registros para paginação
+            // Contagem total de registros para paginaï¿½ï¿½o
             int totalCount = await query.CountAsync();
 
-            // Ordenação
+            // Ordenaï¿½ï¿½o
             if (!string.IsNullOrEmpty(filter.SortBy))
             {
                 switch (filter.SortBy.ToLower())
@@ -177,7 +177,7 @@ namespace AcademiaLoja.Infra.Repositories
                 query = query.OrderByDescending(o => o.OrderDate);
             }
 
-            // Paginação
+            // Paginaï¿½ï¿½o
             if (filter.Page.HasValue && filter.PageSize.HasValue)
             {
                 int page = filter.Page.Value;
@@ -242,10 +242,10 @@ namespace AcademiaLoja.Infra.Repositories
             if (orderItem == null)
                 throw new Exception("Order item not found");
 
-            // Verificar a diferença de quantidade para ajustar o estoque
+            // Verificar a diferenï¿½a de quantidade para ajustar o estoque
             int quantityDifference = request.Quantity - orderItem.Quantity;
 
-            // Se estamos aumentando a quantidade, verificar estoque disponível
+            // Se estamos aumentando a quantidade, verificar estoque disponï¿½vel
             if (quantityDifference > 0)
             {
                 var product = await _context.Products.FindAsync(new object[] { orderItem.ProductId }, cancellationToken);
@@ -309,6 +309,14 @@ namespace AcademiaLoja.Infra.Repositories
             return true;
         }
 
+        public async Task<IEnumerable<Order>> GetPendingOrders(TimeSpan pendingTime)
+        {
+            var cutoff = DateTime.UtcNow - pendingTime;
+            return await _context.Orders
+                .Where(o => o.Status == "Pending" && o.OrderDate < cutoff)
+                .ToListAsync();
+        }
+
         public async Task<bool> DeleteOrderItem(Guid orderId, Guid orderItemId, CancellationToken cancellationToken)
         {
             var order = await _context.Orders.FindAsync(new object[] { orderId }, cancellationToken);
@@ -335,12 +343,12 @@ namespace AcademiaLoja.Infra.Repositories
             order.TotalAmount -= orderItem.Quantity * orderItem.UnitPrice;
             order.UpdatedAt = DateTime.UtcNow;
 
-            // Verificar se há mais itens no pedido
+            // Verificar se hï¿½ mais itens no pedido
             var remainingItems = await _context.OrderItems
                 .Where(oi => oi.OrderId == orderId && oi.Id != orderItemId)
                 .CountAsync(cancellationToken);
 
-            // Se não houver mais itens, excluir o pedido também
+            // Se nï¿½o houver mais itens, excluir o pedido tambï¿½m
             if (remainingItems == 0)
             {
                 _context.Orders.Remove(order);

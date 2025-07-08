@@ -3,16 +3,21 @@ using AcademiaLoja.Application.Models.Dtos;
 using AcademiaLoja.Application.Models.Responses.Orders;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace AcademiaLoja.Application.Queries.Orders.Handlers
 {
     public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Result<GetOrderByIdResponse>>
     {
-        private readonly IOrderRepository _orderRepository;
+        private readonly IOrderRepository _orderRepository;       
 
-        public GetOrderByIdQueryHandler(IOrderRepository orderRepository)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public GetOrderByIdQueryHandler(IOrderRepository orderRepository, IHttpContextAccessor httpContextAccessor)
         {
             _orderRepository = orderRepository;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<Result<GetOrderByIdResponse>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
@@ -26,6 +31,17 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                 if (order == null)
                 {
                     result.WithError("Order not found");
+                    return result;
+                }
+
+                // Verificação de propriedade
+                var user = _httpContextAccessor.HttpContext.User;
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                var isAdmin = user.IsInRole("Admin");
+
+                if (!isAdmin && order.UserId.ToString() != userId)
+                {
+                    result.WithError("You do not have permission to view this order.");
                     return result;
                 }
 
