@@ -58,6 +58,22 @@ namespace AcademiaLoja.Web.Controllers
         }       
 
         [SwaggerOperation(
+            Summary = "Confirm a payment",
+            Description = "Confirms a payment with Stripe")]
+        [SwaggerResponse(200, "Success", typeof(Result<ConfirmPaymentResponse>))]
+        [HttpPost("confirm")]
+        public async Task<IActionResult> ConfirmPayment([FromBody] ConfirmPaymentRequest request)
+        {
+            var command = new ConfirmPaymentCommand(request.PaymentIntentId, request.PaymentMethodId);
+            var result = await _mediator.Send(command);
+
+            if (result.HasSuccess)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+
+        [SwaggerOperation(
             Summary = "Verify payment status",
             Description = "Checks the current status of a payment")]
         [SwaggerResponse(200, "Success", typeof(Result<VerifyPaymentResponse>))]

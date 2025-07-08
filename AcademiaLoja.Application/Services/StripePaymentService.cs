@@ -80,8 +80,8 @@ namespace AcademiaLoja.Application.Services
             }
             catch (StripeException ex)
             {
-                Console.WriteLine($"Erro ao confirmar PaymentIntent {paymentIntentId}: {ex.Message}");
-                throw;
+                _logger.LogError(ex, "Stripe error confirming PaymentIntent {PaymentIntentId}", paymentIntentId);
+                return null; // Retorna nulo em caso de erro para o handler tratar
             }
         }
 

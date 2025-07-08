@@ -217,22 +217,22 @@ namespace AcademiaLoja.Application.Services
             }
         }
 
-        public async Task<Guid> ConvertCartToOrderAsync(string userId, string shippingAddress)
+        public async Task<Guid> ConvertCartToOrderAsync(string userId, AddressRequest shippingAddress)
         {
             var cart = await GetCartAsync(userId);
 
             if (!cart.Items.Any())
                 throw new Exception("Carrinho está vazio");
 
-            // Verificar se userId é um GUID válido (usuário autenticado)
+            // Verificar se userId é um GUID válido (usuário autenticado)              
             if (!Guid.TryParse(userId, out var userGuid))
                 throw new Exception("Usuário deve estar autenticado para finalizar compra");
 
-            // Converter para CreateOrderRequest
+            // Converter para CreateOrderRequest  
             var createOrderRequest = new CreateOrderRequest
             {
                 UserId = userGuid,
-                ShippingAddress = shippingAddress,
+                ShippingAddress = JsonSerializer.Serialize(shippingAddress), // Serialize AddressRequest to string  
                 Items = cart.Items.Select(i => new OrderItemRequest
                 {
                     ProductId = i.ProductId,
@@ -242,7 +242,7 @@ namespace AcademiaLoja.Application.Services
 
             var orderResponse = await _orderRepository.CreateOrder(createOrderRequest, CancellationToken.None);
 
-            // Limpar carrinho após criar pedido
+            // Limpar carrinho após criar pedido  
             await ClearCartAsync(userId);
 
             _logger.LogInformation($"Pedido {orderResponse.OrderId} criado para usuário {userId}");
