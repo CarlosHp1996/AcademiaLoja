@@ -58,6 +58,7 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                         ShippingAddress = order.ShippingAddress,
                         OrderDate = order.OrderDate,
                         UpdatedAt = order.UpdatedAt,
+                        OrderNumber = order.OrderNumber,
                         Items = order.OrderItems?.Select(item => new OrderItemDto
                         {
                             Id = item.Id,

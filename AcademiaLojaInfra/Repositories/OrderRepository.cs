@@ -211,15 +211,29 @@ namespace AcademiaLoja.Infra.Repositories
             return (query, totalCount);
         }
 
-        public async Task<Order> GetById(Guid id, CancellationToken cancellationToken)
+        public async Task<Order?> GetById(Guid id, CancellationToken cancellationToken)
         {
-            return await _context.Orders
+            var order = await _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .Include(o => o.Payments)
                 .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
-        }       
+
+            // Converter caminhos para URLs completas  
+            if (order != null)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    if (item.Product != null)
+                    {
+                        item.Product.ImageUrl = _urlHelper.GenerateImageUrl(item.Product.ImageUrl);
+                    }
+                }
+            }
+
+            return order;
+        }
 
         public async Task<UpdateOrderResponse> UpdateOrder(Guid id, UpdateOrderRequest request, CancellationToken cancellationToken)
         {
