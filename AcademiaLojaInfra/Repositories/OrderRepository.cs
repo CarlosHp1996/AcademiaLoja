@@ -2,6 +2,7 @@ using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Models.Filters;
 using AcademiaLoja.Application.Models.Requests.Orders;
 using AcademiaLoja.Application.Models.Responses.Orders;
+using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Infra.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,12 +12,12 @@ namespace AcademiaLoja.Infra.Repositories
     public class OrderRepository : BaseRepository<Order>, IOrderRepository
     {
         private readonly AppDbContext _context;
-        private readonly IProductRepository _productRepository;
+        private readonly IUrlHelperService _urlHelper;
 
-        public OrderRepository(AppDbContext context, IProductRepository productRepository) : base(context)
+        public OrderRepository(AppDbContext context, IUrlHelperService urlHelperService) : base(context)
         {
             _context = context;
-            _productRepository = productRepository;
+            _urlHelper = urlHelperService;
         }
 
         public async Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request, CancellationToken cancellationToken)
@@ -40,8 +41,17 @@ namespace AcademiaLoja.Infra.Repositories
                 ShippingAddress = request.ShippingAddress,
                 OrderDate = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                TotalAmount = 0, // Ser� calculado com base nos itens
+                TotalAmount = 0
             };
+
+            var orderNumber = await _context.Orders
+                .Where(o => o.UserId == request.UserId && o.OrderNumber > 0)
+                .ToListAsync();
+
+            if (orderNumber.Count > 0)
+                order.OrderNumber = orderNumber.Max(o => o.OrderNumber) + 1;
+            else
+                order.OrderNumber = 1; // Primeiro pedido do usuario
 
             decimal totalAmount = 0;
             var orderItems = new List<OrderItem>();
@@ -104,7 +114,8 @@ namespace AcademiaLoja.Infra.Repositories
                 TotalAmount = order.TotalAmount,
                 Status = order.Status,
                 PaymentStatus = order.PaymentStatus,
-                OrderDate = order.OrderDate
+                OrderDate = order.OrderDate,
+                OrderNumber = order.OrderNumber
             };
         }
 
@@ -139,10 +150,10 @@ namespace AcademiaLoja.Infra.Repositories
             if (filter.MaxAmount.HasValue)
                 query = query.Where(o => o.TotalAmount <= filter.MaxAmount.Value);
 
-            // Contagem total de registros para pagina��o
+            // Contagem total de registros para paginaçao
             int totalCount = await query.CountAsync();
 
-            // Ordena��o
+            // Ordenaçao
             if (!string.IsNullOrEmpty(filter.SortBy))
             {
                 switch (filter.SortBy.ToLower())
@@ -177,12 +188,24 @@ namespace AcademiaLoja.Infra.Repositories
                 query = query.OrderByDescending(o => o.OrderDate);
             }
 
-            // Pagina��o
+            // Paginaçao
             if (filter.Page.HasValue && filter.PageSize.HasValue)
             {
                 int page = filter.Page.Value;
                 int pageSize = filter.PageSize.Value;
                 query = query.Skip((page - 1) * pageSize).Take(pageSize);
+            }
+
+            // Converter caminhos para URLs completas
+            foreach (var order in query)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    if (item.Product != null)
+                    {
+                        item.Product.ImageUrl = _urlHelper.GenerateImageUrl(item.Product.ImageUrl);
+                    }
+                }
             }
 
             return (query, totalCount);
