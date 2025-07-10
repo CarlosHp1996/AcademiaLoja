@@ -38,6 +38,7 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                         Status = order.Status,
                         PaymentStatus = order.PaymentStatus,
                         ShippingAddress = order.ShippingAddress,
+                        OrderNumber = order.OrderNumber,
                         OrderDate = order.OrderDate,
                         UpdatedAt = order.UpdatedAt,
                         Items = order.OrderItems?.Select(item => new OrderItemDto

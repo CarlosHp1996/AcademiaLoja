@@ -9,6 +9,7 @@
         public string Status { get; set; }
         public string PaymentStatus { get; set; }
         public string ShippingAddress { get; set; }
+        public int OrderNumber { get; set; }
         public DateTime OrderDate { get; set; }
         public DateTime UpdatedAt { get; set; }
         public List<OrderItemDto> Items { get; set; } = new List<OrderItemDto>();
