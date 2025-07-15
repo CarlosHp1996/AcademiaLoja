@@ -4,8 +4,10 @@ using AcademiaLoja.Application.Models.Requests.Orders;
 using AcademiaLoja.Application.Models.Responses.Orders;
 using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Domain.Entities;
+using AcademiaLoja.Domain.Helpers;
 using AcademiaLoja.Infra.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace AcademiaLoja.Infra.Repositories
 {
@@ -121,6 +123,9 @@ namespace AcademiaLoja.Infra.Repositories
 
         public async Task<(IQueryable<Order> Result, int TotalCount)> Get(GetOrdersRequestFilter filter)
         {
+            string sortBy = filter.SortBy ?? "OrderDate";
+            bool ascending = filter.SortDirection?.ToLower() != "desc";
+
             var query = _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.OrderItems)
@@ -150,6 +155,15 @@ namespace AcademiaLoja.Infra.Repositories
             if (filter.MaxAmount.HasValue)
                 query = query.Where(o => o.TotalAmount <= filter.MaxAmount.Value);
 
+            if (filter.OrderNumber.HasValue)
+                query = query.Where(o => o.OrderNumber == filter.OrderNumber);
+
+            // Ordenação dinâmica
+            if (DataHelpers.CheckExistingProperty<Order>(sortBy))
+                query = query.OrderByDynamic(sortBy, ascending);
+            else
+                query = ascending ? query.OrderBy(p => p.OrderDate) : query.OrderByDescending(p => p.OrderDate);
+
             // Contagem total de registros para paginaçao
             int totalCount = await query.CountAsync();
 
@@ -159,34 +173,34 @@ namespace AcademiaLoja.Infra.Repositories
                 switch (filter.SortBy.ToLower())
                 {
                     case "orderdate":
-                        query = filter.SortDesc
-                            ? query.OrderByDescending(o => o.OrderDate)
-                            : query.OrderBy(o => o.OrderDate);
+                        query = filter.Ascending
+                            ? query.OrderBy(o => o.OrderDate)
+                            : query.OrderByDescending(o => o.OrderDate);
                         break;
                     case "totalamount":
-                        query = filter.SortDesc
-                            ? query.OrderByDescending(o => o.TotalAmount)
-                            : query.OrderBy(o => o.TotalAmount);
+                        query = filter.Ascending
+                            ? query.OrderBy(o => o.TotalAmount)
+                            : query.OrderByDescending(o => o.TotalAmount);
                         break;
                     case "status":
-                        query = filter.SortDesc
-                            ? query.OrderByDescending(o => o.Status)
-                            : query.OrderBy(o => o.Status);
+                        query = filter.Ascending
+                            ? query.OrderBy(o => o.Status)
+                            : query.OrderByDescending(o => o.Status);
                         break;
                     case "paymentstatus":
-                        query = filter.SortDesc
-                            ? query.OrderByDescending(o => o.PaymentStatus)
-                            : query.OrderBy(o => o.PaymentStatus);
+                        query = filter.Ascending
+                            ? query.OrderBy(o => o.PaymentStatus)
+                            : query.OrderByDescending(o => o.PaymentStatus);
                         break;
                     default:
                         query = query.OrderByDescending(o => o.OrderDate);
                         break;
                 }
             }
-            else
-            {
-                query = query.OrderByDescending(o => o.OrderDate);
-            }
+            //else
+            //{
+            //    query = query.OrderByDescending(o => o.OrderDate);
+            //}
 
             // Paginaçao
             if (filter.Page.HasValue && filter.PageSize.HasValue)

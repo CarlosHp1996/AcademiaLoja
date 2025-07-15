@@ -9,7 +9,6 @@ namespace AcademiaLoja.Application.Models.Filters
         public DateTime? EndDate { get; set; }
         public decimal? MinAmount { get; set; }
         public decimal? MaxAmount { get; set; }
-        public string? SortBy { get; set; } = "OrderDate";
-        public bool SortDesc { get; set; } = true;
+        public int? OrderNumber { get; set; }
     }
 }
