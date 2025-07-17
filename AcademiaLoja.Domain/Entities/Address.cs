@@ -31,6 +31,9 @@ namespace AcademiaLoja.Domain.Entities
 
         public string? Complement { get; set; }
 
+        [Required]
+        public bool MainAddress { get; set; } = false;
+
         // Foreign key for ApplicationUser
         public Guid UserId { get; set; }
 

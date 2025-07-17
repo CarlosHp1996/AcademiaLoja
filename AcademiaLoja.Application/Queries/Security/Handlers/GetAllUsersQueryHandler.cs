@@ -54,7 +54,8 @@ namespace AcademiaLoja.Application.Queries.Security.Handlers
                             ZipCode = address.ZipCode,
                             Neighborhood = address.Neighborhood,
                             Number = address.Number,
-                            Complement = address.Complement
+                            Complement = address.Complement,
+                            MainAddress = address.MainAddress
                         }).ToList() ?? new List<AddressDto>()
                     }),
                     TotalCount = totalCount,

@@ -73,7 +73,8 @@ namespace AcademiaLoja.Infra.Repositories
                             ZipCode = addressDto.ZipCode,
                             Neighborhood = addressDto.Neighborhood,
                             Number = addressDto.Number,
-                            Complement = addressDto.Complement
+                            Complement = addressDto.Complement,
+                            MainAddress = (bool)addressDto.MainAddress
                         });
                     }
                 }
@@ -101,7 +102,8 @@ namespace AcademiaLoja.Infra.Repositories
                         ZipCode = a.ZipCode,
                         Neighborhood = a.Neighborhood,
                         Number = a.Number,
-                        Complement = a.Complement
+                        Complement = a.Complement,
+                        MainAddress = a.MainAddress
                     }).ToList()
                 };
 
@@ -184,7 +186,8 @@ namespace AcademiaLoja.Infra.Repositories
                                 ZipCode = addressDto.ZipCode,
                                 Neighborhood = addressDto.Neighborhood,
                                 Number = addressDto.Number,
-                                Complement = addressDto.Complement
+                                Complement = addressDto.Complement,
+                                MainAddress = (bool)addressDto.MainAddress
                             });
                         }
                         else
@@ -200,6 +203,7 @@ namespace AcademiaLoja.Infra.Repositories
                                 existingAddress.Neighborhood = addressDto.Neighborhood;
                                 existingAddress.Number = addressDto.Number;
                                 existingAddress.Complement = addressDto.Complement;
+                                existingAddress.MainAddress = (bool)addressDto.MainAddress;
                             }
                         }
                     }
@@ -221,7 +225,7 @@ namespace AcademiaLoja.Infra.Repositories
                 }
 
                 // Step 7: Prepare Response
-                var userDto = new AcademiaLoja.Application.Models.Dtos.UserDto
+                var userDto = new UserDto
                 {
                     Id = user.Id,
                     UserName = user.UserName,
@@ -229,7 +233,7 @@ namespace AcademiaLoja.Infra.Repositories
                     PhoneNumber = user.PhoneNumber,
                     Cpf = user.Cpf,
                     Gender = user.Gender,
-                    Addresses = user.Addresses.Select(a => new AcademiaLoja.Application.Models.Dtos.AddressDto
+                    Addresses = user.Addresses.Select(a => new AddressDto
                     {
                         Id = a.Id,
                         Street = a.Street,
@@ -238,7 +242,8 @@ namespace AcademiaLoja.Infra.Repositories
                         ZipCode = a.ZipCode,
                         Neighborhood = a.Neighborhood,
                         Number = a.Number,
-                        Complement = a.Complement
+                        Complement = a.Complement,
+                        MainAddress = a.MainAddress
                     }).ToList()
                 };
 

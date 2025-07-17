@@ -46,6 +46,7 @@ namespace AcademiaLoja.Application.Queries.Security.Handlers
                             Street = a.Street,
                             Number = a.Number,
                             Complement = a.Complement,
+                            MainAddress = a.MainAddress,
                             Neighborhood = a.Neighborhood,
                             City = a.City,
                             State = a.State,
