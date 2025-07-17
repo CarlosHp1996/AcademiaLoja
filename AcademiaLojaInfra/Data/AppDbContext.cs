@@ -89,10 +89,6 @@ namespace AcademiaLoja.Infra.Data
                     .IsRequired()
                     .HasMaxLength(20);
 
-                entity.Property(o => o.ShippingAddress)
-                    .IsRequired()
-                    .HasMaxLength(500);
-
                 entity.Property(o => o.OrderDate)
                     .IsRequired();
 

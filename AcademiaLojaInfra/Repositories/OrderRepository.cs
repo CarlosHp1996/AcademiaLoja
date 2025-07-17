@@ -40,7 +40,6 @@ namespace AcademiaLoja.Infra.Repositories
                 UserId = request.UserId,
                 Status = "Pending",
                 PaymentStatus = "Pending",
-                ShippingAddress = request.ShippingAddress,
                 OrderDate = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 TotalAmount = 0
@@ -261,9 +260,6 @@ namespace AcademiaLoja.Infra.Repositories
 
             if (!string.IsNullOrEmpty(request.PaymentStatus))
                 order.PaymentStatus = request.PaymentStatus;
-
-            if (!string.IsNullOrEmpty(request.ShippingAddress))
-                order.ShippingAddress = request.ShippingAddress;
 
             order.UpdatedAt = DateTime.UtcNow;
 
