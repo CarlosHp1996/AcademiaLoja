@@ -55,7 +55,6 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                         TotalAmount = order.TotalAmount,
                         Status = order.Status,
                         PaymentStatus = order.PaymentStatus,
-                        ShippingAddress = order.ShippingAddress,
                         OrderDate = order.OrderDate,
                         UpdatedAt = order.UpdatedAt,
                         OrderNumber = order.OrderNumber,

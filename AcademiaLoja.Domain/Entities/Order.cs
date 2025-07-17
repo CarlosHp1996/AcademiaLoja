@@ -9,7 +9,6 @@ namespace AcademiaLoja.Domain.Entities
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
         public string PaymentStatus { get; set; }        
-        public string ShippingAddress { get; set; }
         public int OrderNumber { get; set; }
         public DateTime OrderDate { get; set; }
         public DateTime UpdatedAt { get; set; }
