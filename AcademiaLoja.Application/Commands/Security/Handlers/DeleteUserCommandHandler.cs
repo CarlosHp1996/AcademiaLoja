@@ -1,18 +1,17 @@
-﻿using AcademiaLoja.Application.Models.Responses.Security;
-using AcademiaLoja.Domain.Entities.Security;
+﻿using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Application.Models.Responses.Security;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 
 namespace AcademiaLoja.Application.Commands.Security.Handlers
 {
     public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Result<DeleteUserResponse>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserRepository _userRepository;
 
-        public DeleteUserCommandHandler(UserManager<ApplicationUser> userManager)
+        public DeleteUserCommandHandler(IUserRepository userRepository)
         {
-            _userManager = userManager;
+            _userRepository = userRepository;
         }
 
         public async Task<Result<DeleteUserResponse>> Handle(DeleteUserCommand command, CancellationToken cancellationToken)
@@ -20,7 +19,7 @@ namespace AcademiaLoja.Application.Commands.Security.Handlers
             var result = new Result<DeleteUserResponse>();
 
             // Find the user by ID
-            var user = await _userManager.FindByIdAsync(command.Id.ToString());
+            var user = await _userRepository.GetById(command.Id);
             if (user == null)
             {
                 result.WithError("User not found.");
@@ -31,10 +30,10 @@ namespace AcademiaLoja.Application.Commands.Security.Handlers
             var userId = user.Id;
 
             // Delete the user
-            var deleteResult = await _userManager.DeleteAsync(user);
-            if (!deleteResult.Succeeded)
+            var deleteResult = await _userRepository.DeleteUser(command.Id, cancellationToken);
+            if (!deleteResult)
             {
-                result.WithError(deleteResult.Errors.First().Description);
+                result.WithError("Error deleting user");
                 return result;
             }
 

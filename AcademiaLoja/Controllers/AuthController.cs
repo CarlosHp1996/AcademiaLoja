@@ -1,4 +1,5 @@
 ﻿using AcademiaLoja.Application.Commands.Security;
+using AcademiaLoja.Application.Models.Filters;
 using AcademiaLoja.Application.Models.Requests.Security;
 using AcademiaLoja.Application.Models.Responses.Security;
 using AcademiaLoja.Application.Queries.Security;
@@ -75,10 +76,10 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Update existing user information.")]
         [SwaggerResponse(200, "Success", typeof(Result<UpdateUserResponse>))]
         [HttpPut("update")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update([FromBody] UpdateUserRequest request)
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request)
         {
-            var command = new UpdateUserCommand(request);
+            var command = new UpdateUserCommand(id, request);
             var result = await _mediator.Send(command);
 
             if (result.HasSuccess)
@@ -109,9 +110,9 @@ namespace AcademiaLoja.Web.Controllers
         [SwaggerResponse(200, "Success", typeof(Result<GetAllUsersResponse>))]
         [HttpGet("get")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAll([FromQuery] GetAllUsersRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] GetUsersRequestFilter filter)
         {
-            var query = new GetAllUsersQuery(request);
+            var query = new GetAllUsersQuery(filter);
             var result = await _mediator.Send(query);
 
             if (result.HasSuccess)

@@ -1,44 +1,68 @@
-﻿using AcademiaLoja.Application.Models.Responses.Security;
-using AcademiaLoja.Domain.Entities.Security;
+﻿using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Application.Models.Dtos;
+using AcademiaLoja.Application.Models.Responses.Security;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 
 namespace AcademiaLoja.Application.Queries.Security.Handlers
 {
     public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, Result<GetUserByIdResponse>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserRepository _userRepository;
 
-        public GetUserByIdQueryHandler(UserManager<ApplicationUser> userManager)
+        public GetUserByIdQueryHandler(IUserRepository userRepository)
         {
-            _userManager = userManager;
+            _userRepository = userRepository;
         }
 
         public async Task<Result<GetUserByIdResponse>> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
         {
             var result = new Result<GetUserByIdResponse>();
 
-            // Find the user by ID
-            var user = await _userManager.FindByIdAsync(query.Id.ToString());
-            if (user == null)
+            try
             {
-                result.WithError("User not found.");
+                var user = await _userRepository.GetUserById(query.Id, cancellationToken);
+
+                if (user == null)
+                {
+                    result.WithError("User not found");
+                    return result;
+                }
+
+                // Mapear para o DTO de resposta
+                var response = new GetUserByIdResponse
+                {
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+                        Cpf = user.Cpf,
+                        Gender = user.Gender,
+                        Addresses = user.Addresses?.Select(a => new AddressDto
+                        {
+                            Id = a.Id,
+                            Street = a.Street,
+                            Number = a.Number,
+                            Complement = a.Complement,
+                            Neighborhood = a.Neighborhood,
+                            City = a.City,
+                            State = a.State,
+                            ZipCode = a.ZipCode
+                        }).ToList()
+                    }
+                };
+
+                result.Value = response;
+                result.HasSuccess = true;
                 return result;
             }
-
-            // Prepare response
-            var response = new GetUserByIdResponse
+            catch (Exception)
             {
-                Id = user.Id,
-                Name = user.UserName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber
-            };
 
-            result.Count = 1;
-            result.Value = response;
-            return result;
+                throw;
+            }                     
         }
     }
 }

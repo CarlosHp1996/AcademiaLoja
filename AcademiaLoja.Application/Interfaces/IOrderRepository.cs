@@ -13,7 +13,6 @@ namespace AcademiaLoja.Application.Interfaces
 
         Task<(IQueryable<Order> Result, int TotalCount)> Get(GetOrdersRequestFilter filter);
         Task<Order> GetById(Guid id, CancellationToken cancellationToken);
-        // Update
         Task<UpdateOrderResponse> UpdateOrder(Guid id, UpdateOrderRequest request, CancellationToken cancellationToken);
         Task<UpdateOrderItemResponse> UpdateOrderItem(Guid orderId, Guid orderItemId, UpdateOrderItemRequest request, CancellationToken cancellationToken);
         // Delete

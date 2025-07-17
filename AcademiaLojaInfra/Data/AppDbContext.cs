@@ -17,6 +17,8 @@ namespace AcademiaLoja.Infra.Data
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Tracking> Trackings { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -67,7 +69,7 @@ namespace AcademiaLoja.Infra.Data
                 entity.HasOne(p => p.Inventory)
                     .WithOne(i => i.Product)
                     .HasForeignKey<Inventory>(i => i.ProductId);
-            });          
+            });
 
             // Configuração de Order
             modelBuilder.Entity<Order>(entity =>
@@ -85,7 +87,7 @@ namespace AcademiaLoja.Infra.Data
 
                 entity.Property(o => o.PaymentStatus)
                     .IsRequired()
-                    .HasMaxLength(20);                
+                    .HasMaxLength(20);
 
                 entity.Property(o => o.ShippingAddress)
                     .IsRequired()
@@ -196,6 +198,26 @@ namespace AcademiaLoja.Infra.Data
                 entity.HasOne(th => th.Order)
                     .WithMany()
                     .HasForeignKey(th => th.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Address>(entity =>
+            {
+                entity.ToTable("Addresses");
+                entity.HasKey(a => a.Id);
+
+                entity.Property(a => a.Street).IsRequired().HasMaxLength(200);
+                entity.Property(a => a.City).IsRequired().HasMaxLength(100);
+                entity.Property(a => a.State).IsRequired().HasMaxLength(50);
+                entity.Property(a => a.ZipCode).IsRequired().HasMaxLength(20);
+                entity.Property(a => a.Neighborhood).IsRequired().HasMaxLength(100);
+                entity.Property(a => a.Number).IsRequired().HasMaxLength(20);
+                entity.Property(a => a.Complement).HasMaxLength(100);
+
+                // Relacionamento com ApplicationUser
+                entity.HasOne(a => a.User)
+                    .WithMany(u => u.Addresses)
+                    .HasForeignKey(a => a.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }

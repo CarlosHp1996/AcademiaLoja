@@ -1,4 +1,4 @@
-﻿using AcademiaLoja.Application.Models.Requests.Security;
+﻿using AcademiaLoja.Application.Models.Filters;
 using AcademiaLoja.Application.Models.Responses.Security;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
@@ -7,11 +7,11 @@ namespace AcademiaLoja.Application.Queries.Security
 {
     public class GetAllUsersQuery : IRequest<Result<GetAllUsersResponse>>
     {
-        public GetAllUsersRequest Request { get; }
+        public GetUsersRequestFilter Filter { get; }
 
-        public GetAllUsersQuery(GetAllUsersRequest request)
+        public GetAllUsersQuery(GetUsersRequestFilter filter)
         {
-            Request = request;
+            Filter = filter;
         }
     }
 }
