@@ -1,64 +1,38 @@
-﻿using AcademiaLoja.Application.Models.Responses.Security;
-using AcademiaLoja.Application.Services.Interfaces;
-using AcademiaLoja.Domain.Entities.Security;
+﻿using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Application.Models.Responses.Security;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 
 namespace AcademiaLoja.Application.Commands.Security.Handlers
 {
     public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Result<CreateUserResponse>>
     {
-        private ApplicationUser _applicationUser;
-        private UserManager<ApplicationUser> _userManager;
-        private readonly IEmailService _emailService;
+        private readonly IUserRepository _userRepository;
 
-        public CreateUserCommandHandler(UserManager<ApplicationUser> userManager, IEmailService emailService)
+        public CreateUserCommandHandler(IUserRepository userRepository)
         {
-            _userManager = userManager;
-            _emailService = emailService;
+            _userRepository = userRepository;
         }
 
         public async Task<Result<CreateUserResponse>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
         {
             var result = new Result<CreateUserResponse>();
-            var resultado = new IdentityResult();
-            var validEmail = await _emailService.IsValidEmailAsync(request.Request.Email);
 
-            // Validate if it is a valid email
-            if (validEmail is false)
+            try
             {
-                result.WithError("Invalid email format. Please provide a valid email address.");
+                // Delegar toda a lógica de criação para o repositório
+                var response = await _userRepository.CreateUser(request.Request, cancellationToken);
+
+                result.Value = response;
+                result.Count = 1;
+                result.HasSuccess = true;
                 return result;
             }
-
-            _applicationUser = new ApplicationUser();
-            _applicationUser.Email = request.Request.Email != null ? request.Request.Email.ToLower()?.Trim() : null;
-            _applicationUser.UserName = request.Request.Name;
-            _applicationUser.PhoneNumber = request.Request.PhoneNumber;
-            resultado = await _userManager.CreateAsync(_applicationUser, request.Request.Password);
-
-            if (!resultado.Succeeded)
+            catch (Exception ex)
             {
-                result.WithError(resultado.Errors.First().Description);
+                result.WithError($"Error creating product: {ex.Message}");
                 return result;
-            }
-
-            var response = new CreateUserResponse
-            {
-                Id = _applicationUser.Id,
-                Name = _applicationUser.UserName,
-                Email = _applicationUser.Email,
-                PhoneNumber = _applicationUser.PhoneNumber,
-                Message = "User created successfully"
-            };
-
-            // Send email confirmation
-            await _emailService.SendEmailConfirmationAsync(_applicationUser.Email);
-
-            result.Count = 1;
-            result.Value = response;
-            return result;
+            }           
         }
     }
 }

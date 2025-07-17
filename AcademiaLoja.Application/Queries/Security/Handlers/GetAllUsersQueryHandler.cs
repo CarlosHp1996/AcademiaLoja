@@ -1,19 +1,19 @@
-﻿using AcademiaLoja.Application.Models.Responses.Security;
-using AcademiaLoja.Domain.Entities.Security;
+﻿using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Application.Models.Dtos;
+using AcademiaLoja.Application.Models.Filters;
+using AcademiaLoja.Application.Models.Responses.Security;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace AcademiaLoja.Application.Queries.Security.Handlers
 {
     public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, Result<GetAllUsersResponse>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserRepository _repository;
 
-        public GetAllUsersQueryHandler(UserManager<ApplicationUser> userManager)
+        public GetAllUsersQueryHandler(IUserRepository repository)
         {
-            _userManager = userManager;
+            _repository = repository;
         }
 
         public async Task<Result<GetAllUsersResponse>> Handle(GetAllUsersQuery query, CancellationToken cancellationToken)
@@ -22,89 +22,49 @@ namespace AcademiaLoja.Application.Queries.Security.Handlers
 
             try
             {
-                // Get users queryable
-                var usersQuery = _userManager.Users.AsQueryable();
+                var filter = query.Filter ?? new GetUsersRequestFilter();
+                var usersResult = await _repository.GetUsers(filter, cancellationToken);
 
-                // Apply search filter if provided
-                if (!string.IsNullOrEmpty(query.Request.SearchTerm))
+                // Extract the IEnumerable<ApplicationUser> and the count from AsyncOutResult  
+                var users = usersResult.Result(out int totalCount);
+
+                if (users == null || !users.Any())
                 {
-                    string searchTerm = query.Request.SearchTerm.ToLower();
-                    usersQuery = usersQuery.Where(u =>
-                        u.UserName.ToLower().Contains(searchTerm) ||
-                        u.Email.ToLower().Contains(searchTerm) ||
-                        (u.PhoneNumber != null && u.PhoneNumber.Contains(searchTerm))
-                    );
+                    result.WithError("No users found.");
+                    return result;
                 }
 
-                // Apply sorting
-                if (!string.IsNullOrEmpty(query.Request.SortBy))
-                {
-                    // Default to ascending order if not specified
-                    bool ascending = query.Request.SortAscending ?? true;
-
-                    switch (query.Request.SortBy.ToLower())
-                    {
-                        case "name":
-                            usersQuery = ascending ?
-                                usersQuery.OrderBy(u => u.UserName) :
-                                usersQuery.OrderByDescending(u => u.UserName);
-                            break;
-                        case "email":
-                            usersQuery = ascending ?
-                                usersQuery.OrderBy(u => u.Email) :
-                                usersQuery.OrderByDescending(u => u.Email);
-                            break;
-                        case "phonenumber":
-                            usersQuery = ascending ?
-                                usersQuery.OrderBy(u => u.PhoneNumber) :
-                                usersQuery.OrderByDescending(u => u.PhoneNumber);
-                            break;
-                        default:
-                            usersQuery = ascending ?
-                                usersQuery.OrderBy(u => u.Id) :
-                                usersQuery.OrderByDescending(u => u.Id);
-                            break;
-                    }
-                }
-                else
-                {
-                    // Default sort by ID
-                    usersQuery = usersQuery.OrderBy(u => u.Id);
-                }
-
-                // Get total count
-                int totalCount = await usersQuery.CountAsync(cancellationToken);
-
-                // Apply pagination
-                int pageSize = query.Request.PageSize ?? 10;  // Default page size
-                int page = query.Request.Page ?? 1;  // Default to first page
-                int skip = (page - 1) * pageSize;
-
-                var users = await usersQuery
-                    .Skip(skip)
-                    .Take(pageSize)
-                    .ToListAsync(cancellationToken);
-
-                // Calculate total pages
-                int pageCount = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-                // Create response
+                // Map users to response  
                 var response = new GetAllUsersResponse
                 {
-                    Users = users.Select(u => new UserDto
+                    Users = users.Select(user => new UserDto
                     {
-                        Id = u.Id,
-                        Name = u.UserName,
-                        Email = u.Email,
-                        PhoneNumber = u.PhoneNumber
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        Cpf = user.Cpf,
+                        Gender = user.Gender,
+                        PhoneNumber = user.PhoneNumber,
+                        Addresses = user.Addresses?.Select(address => new AddressDto
+                        {
+                            Id = address.Id,
+                            Street = address.Street,
+                            City = address.City,
+                            State = address.State,
+                            ZipCode = address.ZipCode,
+                            Neighborhood = address.Neighborhood,
+                            Number = address.Number,
+                            Complement = address.Complement
+                        }).ToList() ?? new List<AddressDto>()
                     }),
                     TotalCount = totalCount,
-                    PageCount = pageCount,
-                    CurrentPage = page,
-                    PageSize = pageSize
+                    PageCount = (int)Math.Ceiling((decimal)((double)totalCount / filter.PageSize)),
+                    CurrentPage = filter.Page,
+                    PageSize = filter.PageSize
                 };
 
                 result.Value = response;
+                result.HasSuccess = true;
                 return result;
             }
             catch (Exception ex)

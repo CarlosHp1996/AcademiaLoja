@@ -1,71 +1,39 @@
-﻿using AcademiaLoja.Application.Models.Responses.Security;
-using AcademiaLoja.Domain.Entities.Security;
+﻿using AcademiaLoja.Application.Interfaces;
+using AcademiaLoja.Application.Models.Responses.Security;
 using AcademiaLoja.Domain.Helpers;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 
 namespace AcademiaLoja.Application.Commands.Security.Handlers
 {
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Result<UpdateUserResponse>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserRepository _userRepository;
 
-        public UpdateUserCommandHandler(UserManager<ApplicationUser> userManager)
+        public UpdateUserCommandHandler(IUserRepository userRepository)
         {
-            _userManager = userManager;
+            _userRepository = userRepository;
         }
 
-        public async Task<Result<UpdateUserResponse>> Handle(UpdateUserCommand command, CancellationToken cancellationToken)
+        public async Task<Result<UpdateUserResponse>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
             var result = new Result<UpdateUserResponse>();
 
-            // Find the user by ID
-            var user = await _userManager.FindByIdAsync(command.Request.Id.ToString());
-            if (user == null)
+            try
             {
-                result.WithError("User not found.");
+                request.Request.Id = request.Id; // Set the ID from the command to the request
+                // Delegar toda a lógica de criação para o repositório
+                var response = await _userRepository.UpdateUser(request.Request, cancellationToken);
+
+                result.Value = response;
+                result.Count = 1;
+                result.HasSuccess = true;
                 return result;
             }
-
-            // Update user properties
-            user.UserName = command.Request.Name;
-            user.Email = command.Request.Email?.ToLower()?.Trim();
-            user.PhoneNumber = command.Request.PhoneNumber;
-
-            // Update user in database
-            var updateResult = await _userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
+            catch (Exception ex)
             {
-                result.WithError(updateResult.Errors.First().Description);
+                result.WithError($"Error creating product: {ex.Message}");
                 return result;
-            }
-
-            // Update password if provided
-            if (!string.IsNullOrEmpty(command.Request.Password))
-            {
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var resetPasswordResult = await _userManager.ResetPasswordAsync(user, token, command.Request.Password);
-
-                if (!resetPasswordResult.Succeeded)
-                {
-                    result.WithError(resetPasswordResult.Errors.First().Description);
-                    return result;
-                }
-            }
-
-            // Prepare response
-            var response = new UpdateUserResponse
-            {
-                Id = user.Id,
-                Name = user.UserName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-                Message = "User updated successfully"
-            };
-
-            result.Count = 1;
-            result.Value = response;
-            return result;
+            }            
         }
     }
 }

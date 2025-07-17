@@ -24,12 +24,12 @@ namespace AcademiaLoja.Infra.Repositories
 
         public async Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request, CancellationToken cancellationToken)
         {
-            // Verificar se o usu�rio existe
-            var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
+            // Verificar se o usuario existe
+            var user = await _context.Users.FindAsync([request.UserId], cancellationToken);
             if (user == null)
                 throw new Exception("User not found");
 
-            // Verificar se h� pelo menos um item no pedido
+            // Verificar se ha pelo menos um item no pedido
             if (request.Items == null || !request.Items.Any())
                 throw new Exception("An order must have at least one item");
 
@@ -251,7 +251,7 @@ namespace AcademiaLoja.Infra.Repositories
 
         public async Task<UpdateOrderResponse> UpdateOrder(Guid id, UpdateOrderRequest request, CancellationToken cancellationToken)
         {
-            var order = await _context.Orders.FindAsync(new object[] { id }, cancellationToken);
+            var order = await _context.Orders.FindAsync([id], cancellationToken);
             if (order == null)
                 throw new Exception("Order not found");
 
@@ -281,7 +281,7 @@ namespace AcademiaLoja.Infra.Repositories
         public async Task<UpdateOrderItemResponse> UpdateOrderItem(Guid orderId, Guid orderItemId, UpdateOrderItemRequest request, CancellationToken cancellationToken)
         {
             // Verificar se o pedido existe
-            var order = await _context.Orders.FindAsync(new object[] { orderId }, cancellationToken);
+            var order = await _context.Orders.FindAsync([orderId], cancellationToken);
             if (order == null)
                 throw new Exception("Order not found");
 
@@ -299,7 +299,7 @@ namespace AcademiaLoja.Infra.Repositories
             // Se estamos aumentando a quantidade, verificar estoque dispon�vel
             if (quantityDifference > 0)
             {
-                var product = await _context.Products.FindAsync(new object[] { orderItem.ProductId }, cancellationToken);
+                var product = await _context.Products.FindAsync([orderItem.ProductId], cancellationToken);
                 if (product.StockQuantity < quantityDifference)
                     throw new Exception($"Not enough stock for product {product.Name}. Available: {product.StockQuantity}");
 
@@ -309,7 +309,7 @@ namespace AcademiaLoja.Infra.Repositories
             else if (quantityDifference < 0)
             {
                 // Estamos reduzindo a quantidade, devolver ao estoque
-                var product = await _context.Products.FindAsync(new object[] { orderItem.ProductId }, cancellationToken);
+                var product = await _context.Products.FindAsync([orderItem.ProductId], cancellationToken);
                 product.StockQuantity += Math.Abs(quantityDifference);
             }
 
@@ -348,7 +348,7 @@ namespace AcademiaLoja.Infra.Repositories
             // Restaurar estoque dos produtos
             foreach (var item in order.OrderItems)
             {
-                var product = await _context.Products.FindAsync(new object[] { item.ProductId }, cancellationToken);
+                var product = await _context.Products.FindAsync([item.ProductId], cancellationToken);
                 if (product != null)
                 {
                     product.StockQuantity += item.Quantity;
@@ -370,7 +370,7 @@ namespace AcademiaLoja.Infra.Repositories
 
         public async Task<bool> DeleteOrderItem(Guid orderId, Guid orderItemId, CancellationToken cancellationToken)
         {
-            var order = await _context.Orders.FindAsync(new object[] { orderId }, cancellationToken);
+            var order = await _context.Orders.FindAsync([orderId], cancellationToken);
             if (order == null)
                 return false;
 
@@ -381,7 +381,7 @@ namespace AcademiaLoja.Infra.Repositories
                 return false;
 
             // Restaurar estoque do produto
-            var product = await _context.Products.FindAsync(new object[] { orderItem.ProductId }, cancellationToken);
+            var product = await _context.Products.FindAsync([orderItem.ProductId], cancellationToken);
             if (product != null)
             {
                 product.StockQuantity += orderItem.Quantity;
