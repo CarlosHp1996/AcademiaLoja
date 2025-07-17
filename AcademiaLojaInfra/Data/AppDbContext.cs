@@ -209,6 +209,7 @@ namespace AcademiaLoja.Infra.Data
                 entity.Property(a => a.Neighborhood).IsRequired().HasMaxLength(100);
                 entity.Property(a => a.Number).IsRequired().HasMaxLength(20);
                 entity.Property(a => a.Complement).HasMaxLength(100);
+                entity.Property(a => a.MainAddress).IsRequired();
 
                 // Relacionamento com ApplicationUser
                 entity.HasOne(a => a.User)

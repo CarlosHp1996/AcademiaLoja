@@ -12,5 +12,6 @@ namespace AcademiaLoja.Application.Models.Dtos
         public string? Neighborhood { get; set; }
         public string? Number { get; set; }
         public string? Complement { get; set; }
+        public bool? MainAddress { get; set; }
     }
 }
