@@ -40,6 +40,7 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                         OrderNumber = order.OrderNumber,
                         OrderDate = order.OrderDate,
                         UpdatedAt = order.UpdatedAt,
+                        IsActive = order.IsActive,
                         Items = order.OrderItems?.Select(item => new OrderItemDto
                         {
                             Id = item.Id,
