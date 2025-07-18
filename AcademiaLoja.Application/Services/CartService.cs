@@ -2,9 +2,11 @@
 using AcademiaLoja.Application.Models.Requests.Orders;
 using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Threading;
 
 namespace AcademiaLoja.Application.Services
 {
@@ -217,7 +219,7 @@ namespace AcademiaLoja.Application.Services
             }
         }
 
-        public async Task<Guid> ConvertCartToOrderAsync(string userId, AddressRequest shippingAddress)
+        public async Task<Guid> ConvertCartToOrderAsync(string userId, AddressRequest request)
         {
             var cart = await GetCartAsync(userId);
 
@@ -228,11 +230,13 @@ namespace AcademiaLoja.Application.Services
             if (!Guid.TryParse(userId, out var userGuid))
                 throw new Exception("Usuário deve estar autenticado para finalizar compra");
 
+            var address = await _orderRepository.GetById(userGuid, CancellationToken.None);              
+
             // Converter para CreateOrderRequest  
             var createOrderRequest = new CreateOrderRequest
             {
                 UserId = userGuid,
-                ShippingAddress = JsonSerializer.Serialize(shippingAddress), // Serialize AddressRequest to string  
+                AddressId = request.Id,
                 Items = cart.Items.Select(i => new OrderItemRequest
                 {
                     ProductId = i.ProductId,

@@ -25,9 +25,16 @@ namespace AcademiaLoja.Infra.Repositories
         public async Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request, CancellationToken cancellationToken)
         {
             // Verificar se o usuario existe
-            var user = await _context.Users.FindAsync([request.UserId], cancellationToken);
+            var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
             if (user == null)
                 throw new Exception("User not found");
+
+            // Verificar se o endereço existe e pertence ao usuário
+            var address = await _context.Addresses
+                .FirstOrDefaultAsync(a => a.Id == request.AddressId && a.UserId == request.UserId, cancellationToken);
+
+            if (address == null)
+                throw new Exception("Address not found or does not belong to the user");
 
             // Verificar se ha pelo menos um item no pedido
             if (request.Items == null || !request.Items.Any())
@@ -38,6 +45,7 @@ namespace AcademiaLoja.Infra.Repositories
             {
                 Id = Guid.NewGuid(),
                 UserId = request.UserId,
+                AddressId = request.AddressId, // Atribuir o AddressId
                 Status = "Pending",
                 PaymentStatus = "Pending",
                 OrderDate = DateTime.UtcNow,

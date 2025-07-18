@@ -2,6 +2,7 @@ namespace AcademiaLoja.Application.Models.Requests.Orders
 {
     public class AddressRequest
     {
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Cep { get; set; }
         public string Street { get; set; }
