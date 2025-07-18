@@ -110,6 +110,11 @@ namespace AcademiaLoja.Infra.Data
                     .WithOne(p => p.Order)
                     .HasForeignKey(p => p.OrderId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(o => o.Address)
+                    .WithMany()
+                    .HasForeignKey(o => o.AddressId)
+                    .OnDelete(DeleteBehavior.Restrict); // Impede a exclusão de um endereço se houver pedidos associados
             });
 
             // Configuração de OrderItem

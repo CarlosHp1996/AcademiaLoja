@@ -341,7 +341,7 @@ namespace AcademiaLoja.Infra.Repositories
                 {
                     // Default to ascending order if not specified  
 
-                    switch (filter.SortBy.ToLower())
+                    switch (sortBy.ToLower())
                     {
                         case "name":
                             usersQuery = ascending ?

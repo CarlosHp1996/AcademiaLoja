@@ -3,7 +3,7 @@ namespace AcademiaLoja.Application.Models.Requests.Orders
     public class CreateOrderRequest
     {
         public Guid UserId { get; set; }
-        public string ShippingAddress { get; set; }
+        public Guid AddressId { get; set; }
         public List<OrderItemRequest> Items { get; set; } = new List<OrderItemRequest>();
     }
 
