@@ -6,5 +6,6 @@
         public string Status { get; set; }
         public string PaymentStatus { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public bool IsActive { get; set; }
     }
 }

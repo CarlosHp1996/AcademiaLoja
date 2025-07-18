@@ -124,7 +124,8 @@ namespace AcademiaLoja.Infra.Repositories
                 Status = order.Status,
                 PaymentStatus = order.PaymentStatus,
                 OrderDate = order.OrderDate,
-                OrderNumber = order.OrderNumber
+                OrderNumber = order.OrderNumber,
+                IsActive = true,
             };
         }
 
@@ -269,8 +270,16 @@ namespace AcademiaLoja.Infra.Repositories
             if (!string.IsNullOrEmpty(request.PaymentStatus))
                 order.PaymentStatus = request.PaymentStatus;
 
-            order.UpdatedAt = DateTime.UtcNow;
+            if (request.IsActive.HasValue)
+                order.IsActive = request.IsActive.Value;
 
+            if (order.IsActive == false)
+                order.Status = "Finish";
+
+            if (order.IsActive == true)
+                order.Status = "Processing";
+
+            order.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync(cancellationToken);
 
             return new UpdateOrderResponse
@@ -278,7 +287,8 @@ namespace AcademiaLoja.Infra.Repositories
                 OrderId = order.Id,
                 Status = order.Status,
                 PaymentStatus = order.PaymentStatus,
-                UpdatedAt = order.UpdatedAt
+                UpdatedAt = order.UpdatedAt,
+                IsActive = order.IsActive
             };
         }
 

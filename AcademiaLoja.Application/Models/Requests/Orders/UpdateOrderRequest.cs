@@ -4,6 +4,6 @@ namespace AcademiaLoja.Application.Models.Requests.Orders
     {
         public string? Status { get; set; }
         public string? PaymentStatus { get; set; }
-        public string? ShippingAddress { get; set; }
+        public bool? IsActive { get; set; }
     }
 }

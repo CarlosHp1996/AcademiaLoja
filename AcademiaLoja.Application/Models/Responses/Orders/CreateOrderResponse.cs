@@ -8,5 +8,6 @@
         public string PaymentStatus { get; set; }
         public DateTime OrderDate { get; set; }
         public int OrderNumber { get; set; }
+        public bool? IsActive { get; set; }
     }
 }
