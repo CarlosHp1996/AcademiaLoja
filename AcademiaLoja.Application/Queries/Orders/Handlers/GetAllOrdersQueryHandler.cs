@@ -72,6 +72,7 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                     }
                 };
 
+                result.Count = totalCount;
                 result.Value = response;
                 result.HasSuccess = true;
                 return result;
