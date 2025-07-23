@@ -7,7 +7,6 @@ using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Domain.Helpers;
 using AcademiaLoja.Infra.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
 
 namespace AcademiaLoja.Infra.Repositories
 {
@@ -15,11 +14,14 @@ namespace AcademiaLoja.Infra.Repositories
     {
         private readonly AppDbContext _context;
         private readonly IUrlHelperService _urlHelper;
+        private readonly IEmailService _emailService;
 
-        public OrderRepository(AppDbContext context, IUrlHelperService urlHelperService) : base(context)
+        public OrderRepository(AppDbContext context, IUrlHelperService urlHelperService, IEmailService emailService) : base(context)
         {
             _context = context;
             _urlHelper = urlHelperService;
+            _emailService = emailService;
+
         }
 
         public async Task<CreateOrderResponse> CreateOrder(CreateOrderRequest request, CancellationToken cancellationToken)
@@ -107,6 +109,7 @@ namespace AcademiaLoja.Infra.Repositories
                 {
                     await _context.Orders.AddAsync(order, cancellationToken);
                     await _context.OrderItems.AddRangeAsync(orderItems, cancellationToken);
+                    await _emailService.SendEmailConfirmationOrderAsync(order.User.Email);
                     await _context.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                 }
@@ -237,6 +240,7 @@ namespace AcademiaLoja.Infra.Repositories
         {
             var order = await _context.Orders
                 .Include(o => o.User)
+                .Include(o => o.Address)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .Include(o => o.Payments)

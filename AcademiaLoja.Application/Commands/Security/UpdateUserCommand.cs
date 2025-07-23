@@ -8,7 +8,7 @@ namespace AcademiaLoja.Application.Commands.Security
     public class UpdateUserCommand : IRequest<Result<UpdateUserResponse>>
     {
         public Guid Id;
-        public UpdateUserRequest Request { get; }
+        public UpdateUserRequest Request { get; set; }
 
         public UpdateUserCommand(Guid id, UpdateUserRequest request)
         {

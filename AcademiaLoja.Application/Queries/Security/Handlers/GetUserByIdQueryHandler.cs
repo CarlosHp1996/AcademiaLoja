@@ -44,6 +44,7 @@ namespace AcademiaLoja.Application.Queries.Security.Handlers
                         {
                             Id = a.Id,
                             Street = a.Street,
+                            CompletName = a.CompletName,
                             Number = a.Number,
                             Complement = a.Complement,
                             MainAddress = a.MainAddress,

@@ -6,6 +6,7 @@ namespace AcademiaLoja.Application.Models.Dtos
     {
         public Guid? Id { get; set; }
         public string? Street { get; set; }
+        public string? CompletName { get; set; }
         public string? City { get; set; }
         public EnumState? State { get; set; }
         public string? ZipCode { get; set; }

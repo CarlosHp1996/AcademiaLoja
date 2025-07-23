@@ -76,10 +76,16 @@ namespace AcademiaLoja.Web.Controllers
            Description = "Update existing user information.")]
         [SwaggerResponse(200, "Success", typeof(Result<UpdateUserResponse>))]
         [HttpPut("update")]
-        [Authorize(Roles = "User,Admin")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request)
+        //[Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> Update(Guid? id, [FromBody] UpdateUserRequest request)
         {
-            var command = new UpdateUserCommand(id, request);
+            // MODIFICAÇÃO: Se id for null, será uma recuperação de senha por email
+            if (id == null || id == Guid.Empty)
+            {
+                request.IsPasswordRecovery = true;
+            }
+
+            var command = new UpdateUserCommand(id ?? Guid.Empty, request);
             var result = await _mediator.Send(command);
 
             if (result.HasSuccess)
@@ -130,6 +136,22 @@ namespace AcademiaLoja.Web.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var command = new DeleteUserCommand(id);
+            var result = await _mediator.Send(command);
+
+            if (result.HasSuccess)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+
+        [SwaggerOperation(
+                 Summary = "Forgout Password",
+                 Description = "Send a password recovery email to the user.")]
+        [SwaggerResponse(200, "Success", typeof(Result<ForgoutPasswordResponse>))]
+        [HttpPost("forgout-password")]
+        public async Task<IActionResult> ForgoutPassword(string email)
+        {
+            var command = new ForgoutPasswordCommand(email);
             var result = await _mediator.Send(command);
 
             if (result.HasSuccess)
