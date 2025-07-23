@@ -22,5 +22,8 @@ namespace AcademiaLoja.Application.Models.Requests.Security
         public EnumGender? Gender { get; set; }
 
         public ICollection<AddressDto>? Addresses { get; set; }
+
+        // NOVA PROPRIEDADE: Para identificar se a atualização é por email (recuperação de senha)
+        public bool IsPasswordRecovery { get; set; } = false;
     }
 }

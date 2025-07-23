@@ -20,8 +20,7 @@ namespace AcademiaLoja.Application.Commands.Security.Handlers
 
             try
             {
-                request.Request.Id = request.Id; // Set the ID from the command to the request
-                // Delegar toda a lógica de criação para o repositório
+                request.Request.Id = request.Id;
                 var response = await _userRepository.UpdateUser(request.Request, cancellationToken);
 
                 result.Value = response;

@@ -69,7 +69,23 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                         PageSize = pageSize,
                         TotalItems = totalCount,
                         TotalPages = pageCount
-                    }
+                    },
+
+                    Addresses = orders.SelectMany(order => order.User.Addresses)
+                        .Select(address => new AddressDto
+                        {
+                            Id = address.Id,
+                            Street = address.Street,
+                            CompletName = address.CompletName,
+                            City = address.City,
+                            State = address.State,
+                            ZipCode = address.ZipCode,
+                            Neighborhood = address.Neighborhood,
+                            Number = address.Number,
+                            Complement = address.Complement,
+                            MainAddress = address.MainAddress,
+
+                        }).ToList()
                 };
 
                 result.Count = totalCount;

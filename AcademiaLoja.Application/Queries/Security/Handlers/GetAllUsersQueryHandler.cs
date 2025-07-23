@@ -49,6 +49,7 @@ namespace AcademiaLoja.Application.Queries.Security.Handlers
                         {
                             Id = address.Id,
                             Street = address.Street,
+                            CompletName = address.CompletName,
                             City = address.City,
                             State = address.State,
                             ZipCode = address.ZipCode,

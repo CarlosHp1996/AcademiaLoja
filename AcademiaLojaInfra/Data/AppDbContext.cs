@@ -208,6 +208,7 @@ namespace AcademiaLoja.Infra.Data
                 entity.HasKey(a => a.Id);
 
                 entity.Property(a => a.Street).IsRequired().HasMaxLength(200);
+                entity.Property(a => a.CompletName).IsRequired().HasMaxLength(200);
                 entity.Property(a => a.City).IsRequired().HasMaxLength(100);
                 entity.Property(a => a.State).IsRequired().HasMaxLength(50);
                 entity.Property(a => a.ZipCode).IsRequired().HasMaxLength(20);

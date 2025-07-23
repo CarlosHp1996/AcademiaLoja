@@ -2,7 +2,9 @@ using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Models.Dtos;
 using AcademiaLoja.Application.Models.Requests.Trackings;
 using AcademiaLoja.Application.Models.Responses.Trackings;
+using AcademiaLoja.Application.Services.Interfaces;
 using AcademiaLoja.Domain.Entities;
+using AcademiaLoja.Domain.Helpers;
 using AcademiaLoja.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,10 +13,12 @@ namespace AcademiaLoja.Infra.Repositories
     public class TrackingRepository : BaseRepository<Tracking>, ITrackingRepository
     {
         private readonly AppDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public TrackingRepository(AppDbContext dbContext) : base(dbContext)
+        public TrackingRepository(AppDbContext dbContext, IEmailService emailService) : base(dbContext)
         {
             _context = dbContext;
+            _emailService = emailService;
         }
 
         public async Task<TrackingResponse> CreateTrackingEventAsync(CreateTrackingRequest request)
@@ -22,10 +26,12 @@ namespace AcademiaLoja.Infra.Repositories
             try
             {
                 var order = await _context.Orders
+                    .Include(o => o.User)
+                    .Where(o => o.Id == request.OrderId)
                 .FirstOrDefaultAsync();
 
-                //if (order == null)
-                //    throw new KeyNotFoundException("Pedido não encontrado com este código de rastreio.");
+                if (order == null)
+                    throw new KeyNotFoundException("Pedido não encontrado.");
 
                 var trackingEvent = new Tracking
                 {
@@ -38,6 +44,11 @@ namespace AcademiaLoja.Infra.Repositories
                     EventDate = request.EventDate,
                     CreatedAt = DateTime.UtcNow
                 };
+
+                var email = _emailService.SendEmailConfirmationTrackingAsync(order.User.Email);
+
+                if (email.Exception != null)
+                    throw new KeyNotFoundException("Erro ao enviar o email de rastreio.");
 
                 _context.Trackings.Add(trackingEvent);
                 await _context.SaveChangesAsync();

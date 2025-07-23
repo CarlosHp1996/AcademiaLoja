@@ -14,5 +14,6 @@
         public bool IsActive { get; set; }
         public List<OrderItemDto> Items { get; set; } = new List<OrderItemDto>();
         public List<PaymentDto> Payments { get; set; } = new List<PaymentDto>();
+        public List<AddressDto>? Addresses { get; set; }
     }
 }

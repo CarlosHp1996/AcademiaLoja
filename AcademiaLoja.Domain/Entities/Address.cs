@@ -15,6 +15,9 @@ namespace AcademiaLoja.Domain.Entities
         public string Street { get; set; }
 
         [Required]
+        public string CompletName { get; set; }
+
+        [Required]
         public string City { get; set; }
 
         [Required]

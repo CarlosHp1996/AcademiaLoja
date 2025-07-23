@@ -68,6 +68,7 @@ namespace AcademiaLoja.Infra.Repositories
                         applicationUser.Addresses.Add(new Address
                         {
                             Street = addressDto.Street,
+                            CompletName = addressDto.CompletName,
                             City = addressDto.City,
                             State = (Domain.Enums.EnumState)addressDto.State,
                             ZipCode = addressDto.ZipCode,
@@ -97,6 +98,7 @@ namespace AcademiaLoja.Infra.Repositories
                     {
                         Id = a.Id,
                         Street = a.Street,
+                        CompletName = a.CompletName,
                         City = a.City,
                         State = a.State,
                         ZipCode = a.ZipCode,
@@ -129,6 +131,28 @@ namespace AcademiaLoja.Infra.Repositories
             try
             {
                 var result = new Result<UpdateUserResponse>();
+                ApplicationUser user;
+
+                // MODIFICAÇÃO: Se for recuperação de senha, buscar usuário por email
+                if (request.IsPasswordRecovery && !string.IsNullOrWhiteSpace(request.Email))
+                {
+                    user = await _context.Users
+                                         .Include(u => u.Addresses)
+                                         .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower().Trim(), cancellationToken);
+
+                    if (user == null)
+                        throw new Exception("Usuário não encontrado com este email.");
+                }
+                else
+                {
+                    // Busca tradicional por ID
+                    user = await _context.Users
+                                         .Include(u => u.Addresses)
+                                         .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken);
+
+                    if (user == null)
+                        throw new Exception("User not found.");
+                }
 
                 // Step 1: Validate Inputs
                 if (!string.IsNullOrWhiteSpace(request.Cpf) && !ValidationHelpers.IsValidCpf(request.Cpf))
@@ -143,76 +167,73 @@ namespace AcademiaLoja.Infra.Repositories
                     }
                 }
 
-                // Step 2: Fetch User with Addresses
-                var user = await _context.Users
-                                         .Include(u => u.Addresses)
-                                         .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken);
-
-                if (user == null)
-                    throw new Exception("User not found.");
-
-                // Step 3: Update User Properties
-                user.UserName = request.Name ?? user.UserName;
-                user.Email = request.Email?.ToLower().Trim() ?? user.Email;
-                user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
-                user.Cpf = request.Cpf ?? user.Cpf;
-                user.Gender = request.Gender ?? user.Gender;
-
-                // Step 4: Synchronize Addresses
-                if (request.Addresses != null)
+                // Step 3: Update User Properties (apenas se não for recuperação de senha)
+                if (!request.IsPasswordRecovery)
                 {
-                    var addressesFromRequest = request.Addresses.ToDictionary(a => a.Id);
-                    var addressesInDb = user.Addresses.ToList();
+                    user.UserName = request.Name ?? user.UserName;
+                    user.Email = request.Email?.ToLower().Trim() ?? user.Email;
+                    user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
+                    user.Cpf = request.Cpf ?? user.Cpf;
+                    user.Gender = request.Gender ?? user.Gender;
 
-                    // Remove addresses that are in DB but not in the request
-                    foreach (var addressInDb in addressesInDb)
+                    // Step 4: Synchronize Addresses
+                    if (request.Addresses != null)
                     {
-                        if (!addressesFromRequest.ContainsKey(addressInDb.Id))
-                        {
-                            user.Addresses.Remove(addressInDb);
-                        }
-                    }
+                        var addressesFromRequest = request.Addresses.ToDictionary(a => a.Id);
+                        var addressesInDb = user.Addresses.ToList();
 
-                    foreach (var addressDto in request.Addresses)
-                    {
-                        if (addressDto.Id == Guid.Empty)
+                        // Remove addresses that are in DB but not in the request
+                        foreach (var addressInDb in addressesInDb)
                         {
-                            // Add new address
-                            user.Addresses.Add(new Address
+                            if (!addressesFromRequest.ContainsKey(addressInDb.Id))
                             {
-                                Street = addressDto.Street,
-                                City = addressDto.City,
-                                State = (Domain.Enums.EnumState)addressDto.State,
-                                ZipCode = addressDto.ZipCode,
-                                Neighborhood = addressDto.Neighborhood,
-                                Number = addressDto.Number,
-                                Complement = addressDto.Complement,
-                                MainAddress = (bool)addressDto.MainAddress
-                            });
+                                user.Addresses.Remove(addressInDb);
+                            }
                         }
-                        else
+
+                        foreach (var addressDto in request.Addresses)
                         {
-                            // Update existing address
-                            var existingAddress = user.Addresses.FirstOrDefault(a => a.Id == addressDto.Id);
-                            if (existingAddress != null)
+                            if (addressDto.Id == Guid.Empty)
                             {
-                                existingAddress.Street = addressDto.Street;
-                                existingAddress.City = addressDto.City;
-                                existingAddress.State = (Domain.Enums.EnumState)addressDto.State;
-                                existingAddress.ZipCode = addressDto.ZipCode;
-                                existingAddress.Neighborhood = addressDto.Neighborhood;
-                                existingAddress.Number = addressDto.Number;
-                                existingAddress.Complement = addressDto.Complement;
-                                existingAddress.MainAddress = (bool)addressDto.MainAddress;
+                                // Add new address
+                                user.Addresses.Add(new Address
+                                {
+                                    Street = addressDto.Street,
+                                    CompletName = addressDto.CompletName,
+                                    City = addressDto.City,
+                                    State = (Domain.Enums.EnumState)addressDto.State,
+                                    ZipCode = addressDto.ZipCode,
+                                    Neighborhood = addressDto.Neighborhood,
+                                    Number = addressDto.Number,
+                                    Complement = addressDto.Complement,
+                                    MainAddress = (bool)addressDto.MainAddress
+                                });
+                            }
+                            else
+                            {
+                                // Update existing address
+                                var existingAddress = user.Addresses.FirstOrDefault(a => a.Id == addressDto.Id);
+                                if (existingAddress != null)
+                                {
+                                    existingAddress.Street = addressDto.Street;
+                                    existingAddress.CompletName = addressDto.CompletName;
+                                    existingAddress.City = addressDto.City;
+                                    existingAddress.State = (Domain.Enums.EnumState)addressDto.State;
+                                    existingAddress.ZipCode = addressDto.ZipCode;
+                                    existingAddress.Neighborhood = addressDto.Neighborhood;
+                                    existingAddress.Number = addressDto.Number;
+                                    existingAddress.Complement = addressDto.Complement;
+                                    existingAddress.MainAddress = (bool)addressDto.MainAddress;
+                                }
                             }
                         }
                     }
-                }
 
-                // Step 5: Save User Changes
-                var updateResult = await _userManager.UpdateAsync(user);
-                if (!updateResult.Succeeded)
-                    throw new Exception(updateResult.Errors.First().Description);
+                    // Step 5: Save User Changes (apenas se não for recuperação de senha)
+                    var updateResult = await _userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                        throw new Exception(updateResult.Errors.First().Description);
+                }
 
                 // Step 6: Update Password if provided
                 if (!string.IsNullOrEmpty(request.Password))
@@ -237,6 +258,7 @@ namespace AcademiaLoja.Infra.Repositories
                     {
                         Id = a.Id,
                         Street = a.Street,
+                        CompletName = a.CompletName,
                         City = a.City,
                         State = a.State,
                         ZipCode = a.ZipCode,
@@ -250,7 +272,7 @@ namespace AcademiaLoja.Infra.Repositories
                 var response = new UpdateUserResponse
                 {
                     User = userDto,
-                    Message = "User updated successfully"
+                    Message = request.IsPasswordRecovery ? "Senha alterada com sucesso" : "User updated successfully"
                 };
 
                 return response;
