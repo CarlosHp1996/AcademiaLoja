@@ -73,9 +73,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IFileStorageService>(provider =>
-    new FileStorageService(
-        @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"
-    ));
+    new FileStorageService("/app/ImagensBackend"));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
@@ -87,7 +85,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://127.0.0.1:5502")
+        policy.WithOrigins("https://procksuplementos.com.br", "https://www.procksuplementos.com.br")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -258,9 +256,8 @@ using (var scope = app.Services.CreateScope())
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"),
-    RequestPath = ""
+    FileProvider = new PhysicalFileProvider("/app/ImagensBackend"),
+    RequestPath = "/imagens"  // Importante: definir um path específico
 });
 
 // Configure the HTTP request pipeline.
