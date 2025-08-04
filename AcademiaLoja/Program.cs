@@ -43,8 +43,9 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<AccessManager>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+// Configuração do DbContext com resiliência de conexão
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString(connectionString),
+    options.UseSqlServer(builder.Configuration["ACADEMIALOJA_DB_CONNECTION"], // <--- MUDANÇA AQUI! Acessando a variável de ambiente diretamente
         sqlServerOptionsAction: sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
@@ -315,6 +316,7 @@ using (var scope = app.Services.CreateScope())
         throw; // Re-lança a exceção para que o container falhe e você veja o erro
     }
 }
+
 // ===== FIM APLICAR MIGRATIONS =====
 
 // Seed Roles and Admin User
