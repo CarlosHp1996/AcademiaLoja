@@ -44,7 +44,14 @@ builder.Services.AddScoped<AccessManager>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(builder.Configuration.GetConnectionString(connectionString),
+        sqlServerOptionsAction: sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5, // Tenta 5 vezes
+                maxRetryDelay: TimeSpan.FromSeconds(30), // Espera até 30 segundos entre as tentativas
+                errorNumbersToAdd: null); // Usa os códigos de erro padrão do SQL Server para retentativas
+        }));
 
 // ===== CONFIGURAÇÃO REDIS =====
 // Configurar Redis Cache
@@ -266,25 +273,6 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/imagens"  // Importante: definir um path específico
 });
 
-// Aplicar Migrations no startup
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate(); // Aplica todas as migrations pendentes
-        // Opcional: Seed de dados
-        // DbInitializer.Initialize(context); 
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
-        // Você pode querer relançar a exceção ou sair do aplicativo se a migração for crítica
-    }
-}
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
@@ -307,14 +295,17 @@ app.UseAuthorization();
 app.MapControllers();
 
 // ===== APLICAR MIGRATIONS =====
+// Aplicar Migrations no startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate(); // <--- ESTA LINHA É CRUCIAL!
-        Console.WriteLine("✅ Migrations aplicadas com sucesso!");
+        context.Database.Migrate(); // Aplica todas as migrations pendentes
+        Console.WriteLine("✅ Migrations aplicadas com sucesso!"); // Mensagem de sucesso
+        // Opcional: Seed de dados
+        // DbInitializer.Initialize(context); 
     }
     catch (Exception ex)
     {
