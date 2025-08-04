@@ -72,8 +72,14 @@ builder.Services.AddScoped<ITrackingRepository, TrackingRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient();
+//PRODUÇÃO
 builder.Services.AddScoped<IFileStorageService>(provider =>
     new FileStorageService("/app/ImagensBackend"));
+//DESENVOLVIMENTO
+//builder.Services.AddScoped<IFileStorageService>(provider =>
+//    new FileStorageService(
+//        @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"
+//    ));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
@@ -260,6 +266,25 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/imagens"  // Importante: definir um path específico
 });
 
+// Aplicar Migrations no startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate(); // Aplica todas as migrations pendentes
+        // Opcional: Seed de dados
+        // DbInitializer.Initialize(context); 
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+        // Você pode querer relançar a exceção ou sair do aplicativo se a migração for crítica
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
@@ -280,4 +305,35 @@ app.UseAuthentication();
 app.UseSession();
 app.UseAuthorization();
 app.MapControllers();
+
+// ===== APLICAR MIGRATIONS =====
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate(); // <--- ESTA LINHA É CRUCIAL!
+        Console.WriteLine("✅ Migrations aplicadas com sucesso!");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "❌ Erro ao aplicar migrations ou inicializar o banco de dados.");
+        // É importante que este erro seja visível para depuração
+        throw; // Re-lança a exceção para que o container falhe e você veja o erro
+    }
+}
+// ===== FIM APLICAR MIGRATIONS =====
+
+// Seed Roles and Admin User
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+
+    // ... (o restante do seu código de Seed Roles e Admin User)
+}
+
 app.Run();
