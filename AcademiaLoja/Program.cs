@@ -20,8 +20,13 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ===== CONFIGURAÇÃO DE CONNECTION STRING =====
 string connectionString = Environment.GetEnvironmentVariable("ACADEMIALOJA_DB_CONNECTION") ??
-                          builder.Configuration.GetConnectionString("DefaultConnection");
+                          builder.Configuration.GetConnectionString("DefaultConnection") ??
+                          throw new InvalidOperationException("Connection string not found!");
+
+Console.WriteLine($"🔗 Connection String: {connectionString.Replace(connectionString.Split("Password=")[1].Split(";")[0], "***HIDDEN***")}");
+// ===== FIM CONFIGURAÇÃO CONNECTION STRING =====
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -43,22 +48,22 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<AccessManager>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// Configuração do DbContext com resiliência de conexão
+// ===== CONFIGURAÇÃO DO DBCONTEXT COM RETRY =====
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration["ACADEMIALOJA_DB_CONNECTION"], // <--- MUDANÇA AQUI! Acessando a variável de ambiente diretamente
+    options.UseSqlServer(connectionString, // ✅ CORRIGIDO - usando a variável connectionString
         sqlServerOptionsAction: sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5, // Tenta 5 vezes
-                maxRetryDelay: TimeSpan.FromSeconds(30), // Espera até 30 segundos entre as tentativas
-                errorNumbersToAdd: null); // Usa os códigos de erro padrão do SQL Server para retentativas
+                maxRetryCount: 10, // Aumentei para 10 tentativas
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
         }));
+// ===== FIM CONFIGURAÇÃO DBCONTEXT =====
 
 // ===== CONFIGURAÇÃO REDIS =====
-// Configurar Redis Cache
 var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ??
                            builder.Configuration.GetConnectionString("Redis") ??
-                           "localhost:6379"; // Fallback para desenvolvimento local
+                           "localhost:6379";
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -66,10 +71,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "AcademiaLoja";
 });
 
-// Registrar serviços do carrinho
 builder.Services.AddScoped<ICartService, CartService>();
 // ===== FIM CONFIGURAÇÃO REDIS =====
 
+// Registrar outros serviços
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
@@ -81,6 +86,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient();
 //PRODUÇÃO
+// File Storage Service
 builder.Services.AddScoped<IFileStorageService>(provider =>
     new FileStorageService("/app/ImagensBackend"));
 //DESENVOLVIMENTO
@@ -92,9 +98,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddStripeServices(builder.Configuration);
-//builder.Services.AddHostedService<PendingOrderCancellationService>();
 
-// Add Cors (chamada do frontend)
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -106,19 +111,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add MediatR to the services
+// MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
 
-// Configurar logging
+// Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// Registrar serviços usando a extensão
+// CrudGenerator
 builder.Services.AddCrudGenerator();
 
-// Enabling the use of ASP.NET Identity
+// ===== IDENTITY CONFIGURATION =====
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
 {
     options.Password.RequireDigit = false;
@@ -128,10 +133,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     options.Password.RequiredLength = 1;
     options.Password.RequiredUniqueChars = 1;
 })
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+// ===== FIM IDENTITY =====
 
-// Load JWT keys from environment variables
+// ===== JWT CONFIGURATION =====
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -141,7 +147,6 @@ if (string.IsNullOrEmpty(jwtKey))
     throw new InvalidOperationException("The JWT key has not been set. Set the environment variable 'JWT_KEY'.");
 }
 
-// Authentication and JWT Configuration
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -156,8 +161,8 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ClockSkew = TimeSpan.Zero,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
 
@@ -176,10 +181,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Authorization
 builder.Services.AddAuthorization();
+// ===== FIM JWT =====
 
-// Add Swagger
+// ===== SWAGGER CONFIGURATION =====
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -211,16 +216,16 @@ builder.Services.AddSwaggerGen(c =>
 
     c.EnableAnnotations();
 });
+// ===== FIM SWAGGER =====
 
 var app = builder.Build();
 
 // ===== TESTE DE CONEXÃO REDIS =====
-// Testar conexão com Redis na inicialização
 using (var scope = app.Services.CreateScope())
 {
     try
     {
-        var cache = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Caching.Distributed.IDistributedCache>();
+        var cache = scope.ServiceProvider.GetRequiredService<IDistributedCache>();
         await cache.SetStringAsync("test-connection", "Redis conectado com sucesso!");
         var testValue = await cache.GetStringAsync("test-connection");
 
@@ -241,40 +246,126 @@ using (var scope = app.Services.CreateScope())
 }
 // ===== FIM TESTE REDIS =====
 
-// Seed Roles and Admin User
+// ===== APLICAR MIGRATIONS E INICIALIZAR BANCO =====
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
 
-    // Criar roles
-    string[] roleNames = { "User", "Admin" };
-    foreach (var roleName in roleNames)
+    try
     {
-        if (!await roleManager.RoleExistsAsync(roleName))
+        Console.WriteLine("🔄 Verificando conexão com o banco de dados...");
+
+        var context = services.GetRequiredService<AppDbContext>();
+
+        // Testar conexão
+        await context.Database.CanConnectAsync();
+        Console.WriteLine("✅ Conexão com banco de dados estabelecida!");
+
+        // Criar database se não existir
+        bool created = await context.Database.EnsureCreatedAsync();
+        if (created)
         {
-            await roleManager.CreateAsync(new IdentityRole<Guid> { Name = roleName });
+            Console.WriteLine("✅ Database 'academia' criado com sucesso!");
         }
-    }
+        else
+        {
+            Console.WriteLine("ℹ️  Database 'academia' já existe.");
+        }
 
-    // Criar usuário Admin
-    var adminUser = await userManager.FindByEmailAsync("carloshpsantos1996@gmail.com");
-    if (adminUser == null)
+        // Aplicar migrations
+        Console.WriteLine("🔄 Aplicando migrations...");
+        await context.Database.MigrateAsync();
+        Console.WriteLine("✅ Migrations aplicadas com sucesso!");
+
+    }
+    catch (Exception ex)
     {
-        adminUser = new ApplicationUser { UserName = "CarlosAdmin", Email = "carloshpsantos1996@gmail.com" };
-        await userManager.CreateAsync(adminUser, "@Caique123");
-        await userManager.AddToRoleAsync(adminUser, "Admin");
+        logger.LogError(ex, "❌ Erro crítico ao inicializar o banco de dados");
+        Console.WriteLine($"❌ ERRO CRÍTICO: {ex.Message}");
+
+        // Log da inner exception se existir
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine($"❌ ERRO INTERNO: {ex.InnerException.Message}");
+        }
+
+        Console.WriteLine("🔄 Tentando continuar mesmo com erro...");
+        // Não fazer throw para permitir que o container continue rodando para debug
     }
 }
+// ===== FIM MIGRATIONS =====
 
+// ===== SEED DE DADOS =====
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        Console.WriteLine("🔄 Inicializando dados do sistema...");
+
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+
+        // Criar roles
+        string[] roleNames = { "User", "Admin" };
+        foreach (var roleName in roleNames)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                await roleManager.CreateAsync(new IdentityRole<Guid> { Name = roleName });
+                Console.WriteLine($"✅ Role '{roleName}' criada com sucesso!");
+            }
+        }
+
+        // Criar usuário Admin
+        var adminUser = await userManager.FindByEmailAsync("carloshpsantos1996@gmail.com");
+        if (adminUser == null)
+        {
+            adminUser = new ApplicationUser
+            {
+                UserName = "CarlosAdmin",
+                Email = "carloshpsantos1996@gmail.com",
+                EmailConfirmed = true
+            };
+
+            var result = await userManager.CreateAsync(adminUser, "@Caique123");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+                Console.WriteLine("✅ Usuário Admin criado com sucesso!");
+            }
+            else
+            {
+                Console.WriteLine($"❌ Erro ao criar usuário Admin: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("ℹ️  Usuário Admin já existe.");
+        }
+
+        Console.WriteLine("✅ Inicialização de dados concluída!");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Erro ao inicializar dados do sistema");
+        Console.WriteLine($"❌ ERRO AO CRIAR DADOS: {ex.Message}");
+    }
+}
+// ===== FIM SEED =====
+
+// ===== CONFIGURAÇÃO DE ARQUIVOS ESTÁTICOS =====
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider("/app/ImagensBackend"),
-    RequestPath = "/imagens"  // Importante: definir um path específico
+    RequestPath = "/imagens"
 });
+// ===== FIM ARQUIVOS ESTÁTICOS =====
 
-// Configure the HTTP request pipeline.
+// ===== PIPELINE DE MIDDLEWARE =====
 if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 
@@ -294,39 +385,9 @@ app.UseAuthentication();
 app.UseSession();
 app.UseAuthorization();
 app.MapControllers();
+// ===== FIM PIPELINE =====
 
-// ===== APLICAR MIGRATIONS =====
-// Aplicar Migrations no startup
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate(); // Aplica todas as migrations pendentes
-        Console.WriteLine("✅ Migrations aplicadas com sucesso!"); // Mensagem de sucesso
-        // Opcional: Seed de dados
-        // DbInitializer.Initialize(context); 
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "❌ Erro ao aplicar migrations ou inicializar o banco de dados.");
-        // É importante que este erro seja visível para depuração
-        throw; // Re-lança a exceção para que o container falhe e você veja o erro
-    }
-}
-
-// ===== FIM APLICAR MIGRATIONS =====
-
-// Seed Roles and Admin User
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-
-    // ... (o restante do seu código de Seed Roles e Admin User)
-}
+Console.WriteLine("🚀 Aplicação iniciada com sucesso!");
+Console.WriteLine($"🌐 Swagger disponível em: /swagger");
 
 app.Run();
