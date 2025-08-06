@@ -1,6 +1,7 @@
 ﻿using AcademiaLoja.Application.Interfaces;
 using AcademiaLoja.Application.Services;
 using AcademiaLoja.Application.Services.Interfaces;
+using AcademiaLoja.Domain.Entities;
 using AcademiaLoja.Domain.Entities.Security;
 using AcademiaLoja.Domain.Security;
 using AcademiaLoja.Infra.Data;
@@ -380,3 +381,60 @@ Console.WriteLine("🚀 Aplicação iniciada com sucesso!");
 Console.WriteLine($"🌐 Swagger disponível em: /swagger");
 
 app.Run();
+
+public static class SeedData
+{
+    public static async Task Initialize(AppDbContext context)
+    {
+        // Verifica se já existem produtos para evitar duplicação
+        if (!context.Products.Any())
+        {
+            Console.WriteLine("🔄 Inserindo dados de produtos de exemplo...");
+
+            context.Products.AddRange(
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Whey Protein Concentrado",
+                    Description = "Whey protein de alta qualidade para ganho de massa muscular.",
+                    Price = 120.00m,
+                    StockQuantity = 100,
+                    ImageUrl = "/imagens/whey-protein.jpg",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow                    
+                },
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Creatina Monohidratada",
+                    Description = "Suplemento para aumento de força e desempenho.",
+                    Price = 80.00m,
+                    StockQuantity = 150,
+                    ImageUrl = "/imagens/creatina.jpg",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "BCAA em Pó",
+                    Description = "Aminoácidos de cadeia ramificada para recuperação muscular.",
+                    Price = 75.00m,
+                    StockQuantity = 80,
+                    ImageUrl = "/imagens/bcaa.jpg",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                }
+            );
+            await context.SaveChangesAsync();
+            Console.WriteLine("✅ Dados de produtos de exemplo inseridos com sucesso!");
+        }
+        else
+        {
+            Console.WriteLine("ℹ️ Produtos já existem no banco de dados. Pulando seed de produtos.");
+        }
+    }
+}
