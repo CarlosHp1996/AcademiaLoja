@@ -268,6 +268,10 @@ using (var scope = app.Services.CreateScope())
         await context.Database.MigrateAsync(); // Esta linha já cria o banco se não existir e aplica as migrations
         Console.WriteLine("✅ Migrations aplicadas com sucesso!");
 
+        Console.WriteLine("✅ Inserindo dados do produto!");
+        await context.Database.MigrateAsync();
+        Console.WriteLine("✅ Dados do produto inseridos!");
+
     }
     catch (Exception ex)
     {
