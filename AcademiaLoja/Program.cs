@@ -54,9 +54,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         sqlServerOptionsAction: sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 10, // Aumentei para 10 tentativas
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
+                maxRetryCount: 5, // Tenta 5 vezes
+                maxRetryDelay: TimeSpan.FromSeconds(30), // Espera até 30 segundos entre as tentativas
+                errorNumbersToAdd: null); // Usa os códigos de erro padrão do SQL Server para retentativas
         }));
 // ===== FIM CONFIGURAÇÃO DBCONTEXT =====
 
@@ -262,20 +262,9 @@ using (var scope = app.Services.CreateScope())
         await context.Database.CanConnectAsync();
         Console.WriteLine("✅ Conexão com banco de dados estabelecida!");
 
-        // Criar database se não existir
-        bool created = await context.Database.EnsureCreatedAsync();
-        if (created)
-        {
-            Console.WriteLine("✅ Database 'academia' criado com sucesso!");
-        }
-        else
-        {
-            Console.WriteLine("ℹ️  Database 'academia' já existe.");
-        }
-
         // Aplicar migrations
         Console.WriteLine("🔄 Aplicando migrations...");
-        await context.Database.MigrateAsync();
+        await context.Database.MigrateAsync(); // Esta linha já cria o banco se não existir e aplica as migrations
         Console.WriteLine("✅ Migrations aplicadas com sucesso!");
 
     }
