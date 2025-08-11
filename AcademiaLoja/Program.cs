@@ -341,6 +341,40 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine("ℹ️  Usuário Admin já existe.");
         }
 
+        // Criar usuários Admin adicionais para teste
+        for (int i = 1; i <= 5; i++)
+        {
+            string userName = $"admin{i}";
+            string email = $"admin{i}@gmail.com";
+            string password = $"@Admin{i}";
+
+            var existingUser = await userManager.FindByEmailAsync(email);
+            if (existingUser == null)
+            {
+                var newAdmin = new ApplicationUser
+                {
+                    UserName = userName,
+                    Email = email,
+                    EmailConfirmed = true
+                };
+
+                var createResult = await userManager.CreateAsync(newAdmin, password);
+                if (createResult.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newAdmin, "Admin");
+                    Console.WriteLine($"✅ Usuário {userName} criado com sucesso!");
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Erro ao criar {userName}: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"ℹ️ Usuário {userName} já existe.");
+            }
+        }
+
         Console.WriteLine("✅ Inicialização de dados concluída!");
     }
     catch (Exception ex)
