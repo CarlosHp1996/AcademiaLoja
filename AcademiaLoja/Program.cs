@@ -105,7 +105,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://procksuplementos.com.br", "https://www.procksuplementos.com.br")
+        policy.WithOrigins(
+            "https://procksuplementos.com.br",
+            "https://www.procksuplementos.com.br",
+            //URLS PARA TESTAR FRONTEND EM AMBIENTE DEV
+            "http://127.0.0.1:5502",
+            "http://localhost:5502"
+        )
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
