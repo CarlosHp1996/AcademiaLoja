@@ -320,7 +320,7 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-3        // Criar usuário Admin Carlos
+        // Criar usuário Admin Carlos
         var adminUser = await userManager.FindByEmailAsync("carloshpsantos1996@gmail.com");
         if (adminUser == null)
         {
