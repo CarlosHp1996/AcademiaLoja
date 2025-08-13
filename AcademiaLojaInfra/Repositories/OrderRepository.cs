@@ -102,23 +102,31 @@ namespace AcademiaLoja.Infra.Repositories
             // Atualizar o valor total do pedido
             order.TotalAmount = totalAmount;
 
-            // Salvar a ordem e os itens no banco de dados
-            using (var transaction = await _context.Database.BeginTransactionAsync(cancellationToken))
+            // Substituir o bloco de transação existente por:
+
+            // Salvar a ordem e os itens no banco de dados usando ExecutionStrategy
+            var strategy = _context.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
+                using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     await _context.Orders.AddAsync(order, cancellationToken);
                     await _context.OrderItems.AddRangeAsync(orderItems, cancellationToken);
-                    await _emailService.SendEmailConfirmationOrderAsync(order.User.Email);
                     await _context.SaveChangesAsync(cancellationToken);
+
+                    // Só enviar email APÓS o commit da transação
                     await transaction.CommitAsync(cancellationToken);
+
+                    // Email enviado apenas se tudo der certo
+                    await _emailService.SendEmailConfirmationOrderAsync(order.User.Email);
                 }
                 catch (Exception)
                 {
                     await transaction.RollbackAsync(cancellationToken);
                     throw;
                 }
-            }
+            });
 
             return new CreateOrderResponse
             {
@@ -130,6 +138,35 @@ namespace AcademiaLoja.Infra.Repositories
                 OrderNumber = order.OrderNumber,
                 IsActive = true,
             };
+
+            //// Salvar a ordem e os itens no banco de dados
+            //using (var transaction = await _context.Database.BeginTransactionAsync(cancellationToken))
+            //{
+            //    try
+            //    {
+            //        await _context.Orders.AddAsync(order, cancellationToken);
+            //        await _context.OrderItems.AddRangeAsync(orderItems, cancellationToken);
+            //        await _emailService.SendEmailConfirmationOrderAsync(order.User.Email);
+            //        await _context.SaveChangesAsync(cancellationToken);
+            //        await transaction.CommitAsync(cancellationToken);
+            //    }
+            //    catch (Exception)
+            //    {
+            //        await transaction.RollbackAsync(cancellationToken);
+            //        throw;
+            //    }
+            //}
+
+            //return new CreateOrderResponse
+            //{
+            //    OrderId = order.Id,
+            //    TotalAmount = order.TotalAmount,
+            //    Status = order.Status,
+            //    PaymentStatus = order.PaymentStatus,
+            //    OrderDate = order.OrderDate,
+            //    OrderNumber = order.OrderNumber,
+            //    IsActive = true,
+            //};
         }
 
         public async Task<(IQueryable<Order> Result, int TotalCount)> Get(GetOrdersRequestFilter filter)
