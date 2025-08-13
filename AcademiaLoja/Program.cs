@@ -320,7 +320,7 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        // Criar usuário Admin
+3        // Criar usuário Admin Carlos
         var adminUser = await userManager.FindByEmailAsync("carloshpsantos1996@gmail.com");
         if (adminUser == null)
         {
@@ -345,6 +345,33 @@ using (var scope = app.Services.CreateScope())
         else
         {
             Console.WriteLine("ℹ️  Usuário Admin já existe.");
+        }
+
+        // Criar usuário Admin Rivael
+        var adminUserRivael = await userManager.FindByEmailAsync("rivasroch97@gmail.com");
+        if (adminUserRivael == null)
+        {
+            adminUserRivael = new ApplicationUser
+            {
+                UserName = "RivaelAdmin",
+                Email = "rivasroch97@gmail.com",
+                EmailConfirmed = true
+            };
+
+            var resultRivael = await userManager.CreateAsync(adminUserRivael, "@Rivael123");
+            if (resultRivael.Succeeded)
+            {
+                await userManager.AddToRoleAsync(adminUserRivael, "Admin");
+                Console.WriteLine("✅ Usuário Admin Rivael criado com sucesso!");
+            }
+            else
+            {
+                Console.WriteLine($"❌ Erro ao criar usuário Admin Rivael: {string.Join(", ", resultRivael.Errors.Select(e => e.Description))}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("ℹ️  Usuário Admin Rivael já existe.");
         }
 
         // Criar usuários Admin adicionais para teste
