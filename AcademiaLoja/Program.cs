@@ -392,11 +392,21 @@ using (var scope = app.Services.CreateScope())
 // ===== FIM SEED =====
 
 // ===== CONFIGURAÇÃO DE ARQUIVOS ESTÁTICOS =====
+//PRODUÇÃO
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider("/app/ImagensBackend"),
     RequestPath = "/imagens"
 });
+
+//DESENVOLVIMENTO
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(
+//        @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"),
+//    RequestPath = ""
+//});
+
 // ===== FIM ARQUIVOS ESTÁTICOS =====
 
 // ===== PIPELINE DE MIDDLEWARE =====
