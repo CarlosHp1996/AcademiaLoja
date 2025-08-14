@@ -69,7 +69,7 @@ namespace AcademiaLoja.Application.Services
                         Para começar a explorar, clique no botão abaixo:
                       </p>
                       <div style='text-align: center; margin: 30px 0;'>
-                        <a href='https://power-rock-ofertas.com.br' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Acessar minha conta</a>
+                        <a href='https://procksuplementos.com.br' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Acessar minha conta</a>
                       </div>
                       <p style='font-size: 14px; color: #666;'>Se você não criou essa conta, pode ignorar este email com segurança.</p>
                     </td>
@@ -109,7 +109,7 @@ namespace AcademiaLoja.Application.Services
                         Para ver os detalhes do seu pedido, clique no botão abaixo:
                       </p>
                       <div style='text-align: center; margin: 30px 0;'>
-                        <a href='https://power-rock-ofertas.com.br/public/html/dashboard.html' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Ver meu pedido</a>
+                        <a href='https://procksuplementos.com.br/dashboard.html' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Ver meu pedido</a>
                       </div>
                       <p style='font-size: 14px; color: #666;'>Se você não realizou esse pedido, pode ignorar este email com segurança.</p>
                     </td            
@@ -151,7 +151,7 @@ namespace AcademiaLoja.Application.Services
                         Para redefinir sua senha, clique no botão abaixo:
                       </p>
                       <div style='text-align: center; margin: 30px 0;'>
-                        <a href='https://power-rock-ofertas.com.br/public/html/forgout-password.html?email={encodedEmail}' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Redefinir minha senha</a>
+                        <a href='https://procksuplementos.com.br/forgout-password.html?email={encodedEmail}' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Redefinir minha senha</a>
                       </div>
                       <p style='font-size: 14px; color: #666;'>Se você não solicitou essa alteração, pode ignorar este email com segurança.</p>
                       <p style='font-size: 12px; color: #999;'>Este link é válido apenas para o email: {email}</p>
@@ -191,7 +191,7 @@ namespace AcademiaLoja.Application.Services
                         Para rastrear seu pedido, clique no botão abaixo:
                       </p>
                       <div style='text-align: center; margin: 30px 0;'>
-                        <a href='https://power-rock-ofertas.com.br/public/html/tracking.html' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Rastrear meu pedido</a>
+                        <a href='https://procksuplementos.com.br/tracking.html' style='background-color: #10b981; color: white; padding: 14px 30px; text-decoration: none; font-size: 16px; border-radius: 6px;'>Rastrear meu pedido</a>
                       </div>
                       <p style='font-size: 14px; color: #666;'>Se você não realizou esse pedido, pode ignorar este email com segurança.</p>
                     </td>
