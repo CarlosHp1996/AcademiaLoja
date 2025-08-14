@@ -348,13 +348,13 @@ using (var scope = app.Services.CreateScope())
         }
 
         // Criar usuário Admin Rivael
-        var adminUserRivael = await userManager.FindByEmailAsync("rivasroch97@gmail.com");
+        var adminUserRivael = await userManager.FindByEmailAsync("rivaelrocha@icloud.com");
         if (adminUserRivael == null)
         {
             adminUserRivael = new ApplicationUser
             {
                 UserName = "RivaelAdmin",
-                Email = "rivasroch97@gmail.com",
+                Email = "rivaelrocha@icloud.com",
                 EmailConfirmed = true
             };
 
