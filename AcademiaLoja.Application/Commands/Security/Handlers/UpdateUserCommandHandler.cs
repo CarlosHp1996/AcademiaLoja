@@ -30,9 +30,9 @@ namespace AcademiaLoja.Application.Commands.Security.Handlers
             }
             catch (Exception ex)
             {
-                result.WithError($"Error creating product: {ex.Message}");
+                result.WithError($"Error updating user: {ex.Message}");
                 return result;
             }            
         }
-    }
+    } 
 }
