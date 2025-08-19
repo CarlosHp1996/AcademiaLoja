@@ -52,9 +52,12 @@ namespace AcademiaLoja.Infra.Repositories
                     }
                 }
 
+                //Retirar espaços em branco do nome e gerar um novo UserName
+                string userName = UserNameHelper.GenerateUserName(request.Name);
+
                 var applicationUser = new ApplicationUser
                 {
-                    UserName = request.Name,
+                    UserName = userName,
                     Email = request.Email.ToLower().Trim(),
                     PhoneNumber = request.PhoneNumber,
                     Cpf = request.Cpf,
@@ -228,6 +231,10 @@ namespace AcademiaLoja.Infra.Repositories
                             }
                         }
                     }
+
+                    //Retirar espaços em branco do nome e gerar um novo UserName    
+                    string userName = UserNameHelper.GenerateUserName(request.Name);
+                    user.UserName = userName;
 
                     // Step 5: Save User Changes (apenas se não for recuperação de senha)
                     var updateResult = await _userManager.UpdateAsync(user);
