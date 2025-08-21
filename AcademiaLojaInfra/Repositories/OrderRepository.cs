@@ -47,12 +47,13 @@ namespace AcademiaLoja.Infra.Repositories
             {
                 Id = Guid.NewGuid(),
                 UserId = request.UserId,
-                AddressId = request.AddressId, // Atribuir o AddressId
+                AddressId = request.AddressId,
                 Status = "Pending",
                 PaymentStatus = "Pending",
                 OrderDate = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                TotalAmount = 0
+                TotalAmount = 0,
+                PaymentMethod = request.PaymentMethod
             };
 
             var orderNumber = await _context.Orders
@@ -138,35 +139,6 @@ namespace AcademiaLoja.Infra.Repositories
                 OrderNumber = order.OrderNumber,
                 IsActive = true,
             };
-
-            //// Salvar a ordem e os itens no banco de dados
-            //using (var transaction = await _context.Database.BeginTransactionAsync(cancellationToken))
-            //{
-            //    try
-            //    {
-            //        await _context.Orders.AddAsync(order, cancellationToken);
-            //        await _context.OrderItems.AddRangeAsync(orderItems, cancellationToken);
-            //        await _emailService.SendEmailConfirmationOrderAsync(order.User.Email);
-            //        await _context.SaveChangesAsync(cancellationToken);
-            //        await transaction.CommitAsync(cancellationToken);
-            //    }
-            //    catch (Exception)
-            //    {
-            //        await transaction.RollbackAsync(cancellationToken);
-            //        throw;
-            //    }
-            //}
-
-            //return new CreateOrderResponse
-            //{
-            //    OrderId = order.Id,
-            //    TotalAmount = order.TotalAmount,
-            //    Status = order.Status,
-            //    PaymentStatus = order.PaymentStatus,
-            //    OrderDate = order.OrderDate,
-            //    OrderNumber = order.OrderNumber,
-            //    IsActive = true,
-            //};
         }
 
         public async Task<(IQueryable<Order> Result, int TotalCount)> Get(GetOrdersRequestFilter filter)
@@ -205,6 +177,9 @@ namespace AcademiaLoja.Infra.Repositories
 
             if (filter.OrderNumber.HasValue)
                 query = query.Where(o => o.OrderNumber == filter.OrderNumber);
+
+            if (!string.IsNullOrEmpty(filter.PaymentMethod))
+                query = query.Where(o => o.PaymentMethod == filter.PaymentMethod);
 
             // Ordenação dinâmica
             if (DataHelpers.CheckExistingProperty<Order>(sortBy))
@@ -329,7 +304,8 @@ namespace AcademiaLoja.Infra.Repositories
                 Status = order.Status,
                 PaymentStatus = order.PaymentStatus,
                 UpdatedAt = order.UpdatedAt,
-                IsActive = order.IsActive
+                IsActive = order.IsActive,
+                PaymentMethod = order.PaymentMethod
             };
         }
 

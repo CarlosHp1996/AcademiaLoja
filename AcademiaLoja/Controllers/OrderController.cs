@@ -13,8 +13,6 @@ namespace AcademiaLoja.Web.Controllers
 {
     using Microsoft.AspNetCore.Authorization;
 
-//... (other using statements)
-
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]

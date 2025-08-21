@@ -4,6 +4,7 @@ namespace AcademiaLoja.Application.Models.Requests.Orders
     {
         public Guid UserId { get; set; }
         public Guid AddressId { get; set; }
+        public string PaymentMethod { get; set; }
         public List<OrderItemRequest> Items { get; set; } = new List<OrderItemRequest>();
     }
 
