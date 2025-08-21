@@ -13,6 +13,7 @@ namespace AcademiaLoja.Web.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TrackingController : ControllerBase
     {
         private readonly IMediator _mediator;

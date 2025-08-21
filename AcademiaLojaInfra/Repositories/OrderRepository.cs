@@ -104,8 +104,6 @@ namespace AcademiaLoja.Infra.Repositories
             // Atualizar o valor total do pedido
             order.TotalAmount = totalAmount;
 
-            // Substituir o bloco de transação existente por:
-
             // Salvar a ordem e os itens no banco de dados usando ExecutionStrategy
             var strategy = _context.Database.CreateExecutionStrategy();
             await strategy.ExecuteAsync(async () =>
