@@ -14,6 +14,7 @@ namespace AcademiaLoja.Domain.Entities
         public DateTime OrderDate { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; }
+        public string PaymentMethod { get; set; }
 
         // Navegação
         public virtual ApplicationUser User { get; set; }

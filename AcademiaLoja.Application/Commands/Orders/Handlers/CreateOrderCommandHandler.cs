@@ -20,7 +20,6 @@ namespace AcademiaLoja.Application.Commands.Orders.Handlers
 
             try
             {
-                // Delegar a lógica de criação para o repositório
                 var response = await _orderRepository.CreateOrder(request.Request, cancellationToken);
 
                 result.Value = response;

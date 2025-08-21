@@ -11,5 +11,6 @@ namespace AcademiaLoja.Application.Models.Requests.Orders
         public string Neighborhood { get; set; }
         public string City { get; set; }
         public string State { get; set; }
+        public string PaymentMethod { get; set; }
     }
 }

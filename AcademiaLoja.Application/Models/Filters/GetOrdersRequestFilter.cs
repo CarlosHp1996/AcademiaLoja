@@ -10,5 +10,6 @@ namespace AcademiaLoja.Application.Models.Filters
         public decimal? MinAmount { get; set; }
         public decimal? MaxAmount { get; set; }
         public int? OrderNumber { get; set; }
+        public string? PaymentMethod { get; set; }
     }
 }

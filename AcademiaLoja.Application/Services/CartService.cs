@@ -237,6 +237,7 @@ namespace AcademiaLoja.Application.Services
             {
                 UserId = userGuid,
                 AddressId = request.Id,
+                PaymentMethod = request.PaymentMethod,
                 Items = cart.Items.Select(i => new OrderItemRequest
                 {
                     ProductId = i.ProductId,

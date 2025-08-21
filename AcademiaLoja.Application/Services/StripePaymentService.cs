@@ -91,18 +91,6 @@ namespace AcademiaLoja.Application.Services
             return await service.GetAsync(paymentIntentId, null);
         }
 
-        public async Task<Refund> RefundPaymentAsync(string paymentIntentId, long? amount = null, CancellationToken cancellationToken = default)
-        {
-            var options = new RefundCreateOptions
-            {
-                PaymentIntent = paymentIntentId,
-                Amount = amount
-            };
-
-            var service = new RefundService();
-            return await service.CreateAsync(options, null, cancellationToken);
-        }
-
         public async Task<bool> VerifyPaymentAsync(string paymentIntentId, CancellationToken cancellationToken = default)
         {
             try
