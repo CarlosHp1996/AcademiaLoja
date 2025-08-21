@@ -53,7 +53,8 @@ namespace AcademiaLoja.Infra.Repositories
                 OrderDate = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 TotalAmount = 0,
-                PaymentMethod = request.PaymentMethod
+                PaymentMethod = request.PaymentMethod,
+                IsActive = true
             };
 
             var orderNumber = await _context.Orders
