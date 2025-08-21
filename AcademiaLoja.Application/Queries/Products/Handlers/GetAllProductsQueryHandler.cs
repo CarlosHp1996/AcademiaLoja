@@ -64,8 +64,9 @@ namespace AcademiaLoja.Application.Queries.Products.Handlers
 
                     Filters = filtersData
                 };
-
+                
                 result.Value = response;
+                result.Count = totalCount;
                 result.HasSuccess = true;
                 return result;
             }

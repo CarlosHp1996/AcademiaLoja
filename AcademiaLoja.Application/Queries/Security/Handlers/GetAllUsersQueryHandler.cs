@@ -66,6 +66,7 @@ namespace AcademiaLoja.Application.Queries.Security.Handlers
                 };
 
                 result.Value = response;
+                result.Count = totalCount;
                 result.HasSuccess = true;
                 return result;
             }
