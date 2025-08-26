@@ -12,6 +12,7 @@
         public DateTime OrderDate { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; }
+        public string PaymentMethod { get; set; }
         public List<OrderItemDto> Items { get; set; } = new List<OrderItemDto>();
         public List<PaymentDto> Payments { get; set; } = new List<PaymentDto>();
         public List<AddressDto>? Addresses { get; set; }

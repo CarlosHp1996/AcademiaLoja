@@ -41,6 +41,7 @@ namespace AcademiaLoja.Application.Queries.Orders.Handlers
                         OrderDate = order.OrderDate,
                         UpdatedAt = order.UpdatedAt,
                         IsActive = order.IsActive,
+                        PaymentMethod = order.PaymentMethod,
                         Items = order.OrderItems?.Select(item => new OrderItemDto
                         {
                             Id = item.Id,
