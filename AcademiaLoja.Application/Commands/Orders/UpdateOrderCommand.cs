@@ -7,8 +7,9 @@ namespace AcademiaLoja.Application.Commands.Orders
 {
     public class UpdateOrderCommand : IRequest<Result<UpdateOrderResponse>>
     {
-        public Guid OrderId { get; set; }
-        public UpdateOrderRequest Request;
+        public Guid OrderId { get; }
+        public UpdateOrderRequest Request { get; }
+
         public UpdateOrderCommand(Guid orderId, UpdateOrderRequest request)
         {
             OrderId = orderId;

@@ -21,7 +21,6 @@ namespace AcademiaLoja.Application.Commands.Orders.Handlers
             try
             {
                 var response = await _orderRepository.UpdateOrderItem(request.OrderId, request.OrderItemId, request.Request, cancellationToken);
-
                 result.Value = response;
                 result.Count = 1;
                 result.HasSuccess = true;

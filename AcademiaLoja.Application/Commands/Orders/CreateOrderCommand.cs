@@ -7,7 +7,8 @@ namespace AcademiaLoja.Application.Commands.Orders
 {
     public class CreateOrderCommand : IRequest<Result<CreateOrderResponse>>
     {
-        public CreateOrderRequest Request;
+        public CreateOrderRequest Request { get; }
+
         public CreateOrderCommand(CreateOrderRequest request)
         {
             Request = request;
