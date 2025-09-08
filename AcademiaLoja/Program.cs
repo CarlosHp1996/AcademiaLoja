@@ -51,14 +51,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // ===== CONFIGURAÇÃO DO DBCONTEXT COM RETRY =====
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString, // ✅ CORRIGIDO - usando a variável connectionString
-        sqlServerOptionsAction: sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5, // Tenta 5 vezes
-                maxRetryDelay: TimeSpan.FromSeconds(30), // Espera até 30 segundos entre as tentativas
-                errorNumbersToAdd: null); // Usa os códigos de erro padrão do SQL Server para retentativas
-        }));
+    options.UseNpgsql(connectionString));
 // ===== FIM CONFIGURAÇÃO DBCONTEXT =====
 
 // ===== CONFIGURAÇÃO REDIS =====
@@ -483,7 +476,7 @@ public static class SeedData
                     ImageUrl = "/imagens/whey-protein.jpg",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow                    
+                    UpdatedAt = DateTime.UtcNow
                 },
                 new Product
                 {
