@@ -26,7 +26,18 @@ string connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ??
                           builder.Configuration.GetConnectionString("DefaultConnection") ??
                           throw new InvalidOperationException("Connection string not found!");
 
-Console.WriteLine($"🔗 Connection String: {connectionString.Replace(connectionString.Split("Password=")[1].Split(";")[0], "***HIDDEN***")}");
+// Logging seguro da connection string
+try
+{
+    var safeConnectionString = connectionString.Contains("Password=")
+        ? connectionString.Substring(0, connectionString.IndexOf("Password=") + 9) + "***HIDDEN***" + connectionString.Substring(connectionString.IndexOf(";", connectionString.IndexOf("Password=")))
+        : connectionString;
+    Console.WriteLine($"🔗 Connection String: {safeConnectionString}");
+}
+catch
+{
+    Console.WriteLine("🔗 Connection String configured");
+}
 // ===== FIM CONFIGURAÇÃO CONNECTION STRING =====
 
 // Add services to the container.
@@ -49,9 +60,15 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<AccessManager>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// ===== CONFIGURAÇÃO DO DBCONTEXT COM RETRY =====
+// ===== CONFIGURAÇÃO DO DBCONTEXT =====
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorCodesToAdd: null);
+    }));
 // ===== FIM CONFIGURAÇÃO DBCONTEXT =====
 
 // ===== CONFIGURAÇÃO REDIS =====
@@ -59,13 +76,26 @@ var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_URL") ??
                            builder.Configuration.GetConnectionString("Redis") ??
                            "localhost:6379";
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = redisConnectionString;
-    options.InstanceName = "AcademiaLoja";
-});
+Console.WriteLine($"🔗 Redis Connection: {redisConnectionString}");
 
-builder.Services.AddScoped<ICartService, CartService>();
+try
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = "AcademiaLoja";
+    });
+    builder.Services.AddScoped<ICartService, CartService>();
+    Console.WriteLine("✅ Redis configurado com sucesso!");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"❌ Erro ao configurar Redis: {ex.Message}");
+    Console.WriteLine("⚠️ Continuando sem Redis Cache...");
+    // Fallback para cache em memória
+    builder.Services.AddMemoryCache();
+    builder.Services.AddScoped<ICartService, CartService>();
+}
 // ===== FIM CONFIGURAÇÃO REDIS =====
 
 // Registrar outros serviços
@@ -79,6 +109,7 @@ builder.Services.AddScoped<ITrackingRepository, TrackingRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient();
+
 //PRODUÇÃO
 // File Storage Service
 builder.Services.AddScoped<IFileStorageService>(provider =>
@@ -88,6 +119,7 @@ builder.Services.AddScoped<IFileStorageService>(provider =>
 //    new FileStorageService(
 //        @"C:\Users\Carlos Henrique\Desktop\PROJETOSNOVOS\AcademiaLoja\ImagensBackend"
 //    ));
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
@@ -138,14 +170,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
 // ===== FIM IDENTITY =====
 
 // ===== JWT CONFIGURATION =====
-var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"];
-var jwtAudience = builder.Configuration["Jwt:Audience"];
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ??
+             builder.Configuration["Jwt:Key"] ??
+             throw new InvalidOperationException("JWT_KEY environment variable is required");
 
-if (string.IsNullOrEmpty(jwtKey))
-{
-    throw new InvalidOperationException("The JWT key has not been set. Set the environment variable 'JWT_KEY'.");
-}
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ??
+                builder.Configuration["Jwt:Issuer"] ??
+                "AcademiaLoja";
+
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ??
+                  builder.Configuration["Jwt:Audience"] ??
+                  "AcademiaLoja";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -170,11 +205,18 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = context =>
         {
-            var accessManager = context.HttpContext.RequestServices.GetRequiredService<AccessManager>();
-            var token = context.SecurityToken as JwtSecurityToken;
-            if (token != null && AccessManager.IsTokenBlacklisted(token.RawData))
+            try
             {
-                context.Fail("Este token foi invalidado.");
+                var accessManager = context.HttpContext.RequestServices.GetRequiredService<AccessManager>();
+                var token = context.SecurityToken as JwtSecurityToken;
+                if (token != null && AccessManager.IsTokenBlacklisted(token.RawData))
+                {
+                    context.Fail("Este token foi invalidado.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Erro na validação do token: {ex.Message}");
             }
             return Task.CompletedTask;
         }
@@ -226,7 +268,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var cache = scope.ServiceProvider.GetRequiredService<IDistributedCache>();
-        await cache.SetStringAsync("test-connection", "Redis conectado com sucesso!");
+        await cache.SetStringAsync("test-connection", "Redis conectado com sucesso!", new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+        });
         var testValue = await cache.GetStringAsync("test-connection");
 
         if (testValue != null)
@@ -241,7 +286,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"❌ Erro ao conectar com Redis: {ex.Message}");
-        Console.WriteLine("⚠️  Verifique se o Redis está rodando na porta 6379");
+        Console.WriteLine("⚠️ Continuando sem Redis Cache...");
     }
 }
 // ===== FIM TESTE REDIS =====
@@ -255,21 +300,27 @@ using (var scope = app.Services.CreateScope())
     try
     {
         Console.WriteLine("🔄 Verificando conexão com o banco de dados...");
-
         var context = services.GetRequiredService<AppDbContext>();
 
-        // Testar conexão
-        await context.Database.CanConnectAsync();
+        // Testar conexão com timeout
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var canConnect = await context.Database.CanConnectAsync(cts.Token);
+
+        if (!canConnect)
+        {
+            throw new InvalidOperationException("Não foi possível conectar ao banco de dados");
+        }
+
         Console.WriteLine("✅ Conexão com banco de dados estabelecida!");
 
         // Aplicar migrations
         Console.WriteLine("🔄 Aplicando migrations...");
-        await context.Database.MigrateAsync(); // Esta linha já cria o banco se não existir e aplica as migrations
+        await context.Database.MigrateAsync(cts.Token);
         Console.WriteLine("✅ Migrations aplicadas com sucesso!");
 
-        Console.WriteLine("✅ Inserindo dados do produto!");
-        await context.Database.MigrateAsync();
-        Console.WriteLine("✅ Dados do produto inseridos!");
+        // Seed de dados
+        await SeedData.Initialize(context);
+        Console.WriteLine("✅ Dados iniciais configurados!");
 
     }
     catch (Exception ex)
@@ -277,19 +328,18 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "❌ Erro crítico ao inicializar o banco de dados");
         Console.WriteLine($"❌ ERRO CRÍTICO: {ex.Message}");
 
-        // Log da inner exception se existir
         if (ex.InnerException != null)
         {
             Console.WriteLine($"❌ ERRO INTERNO: {ex.InnerException.Message}");
         }
 
-        Console.WriteLine("🔄 Tentando continuar mesmo com erro...");
-        // Não fazer throw para permitir que o container continue rodando para debug
+        // Em produção, pode ser necessário falhar aqui
+        throw;
     }
 }
 // ===== FIM MIGRATIONS =====
 
-// ===== SEED DE DADOS =====
+// ===== SEED DE USUÁRIOS =====
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -335,10 +385,6 @@ using (var scope = app.Services.CreateScope())
                 Console.WriteLine($"❌ Erro ao criar usuário Admin: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
         }
-        else
-        {
-            Console.WriteLine("ℹ️  Usuário Admin já existe.");
-        }
 
         // Criar usuário Admin Rivael
         var adminUserRivael = await userManager.FindByEmailAsync("rivaelrocha@icloud.com");
@@ -357,48 +403,6 @@ using (var scope = app.Services.CreateScope())
                 await userManager.AddToRoleAsync(adminUserRivael, "Admin");
                 Console.WriteLine("✅ Usuário Admin Rivael criado com sucesso!");
             }
-            else
-            {
-                Console.WriteLine($"❌ Erro ao criar usuário Admin Rivael: {string.Join(", ", resultRivael.Errors.Select(e => e.Description))}");
-            }
-        }
-        else
-        {
-            Console.WriteLine("ℹ️  Usuário Admin Rivael já existe.");
-        }
-
-        // Criar usuários Admin adicionais para teste
-        for (int i = 1; i <= 5; i++)
-        {
-            string userName = $"admin{i}";
-            string email = $"admin{i}@gmail.com";
-            string password = $"@Admin{i}";
-
-            var existingUser = await userManager.FindByEmailAsync(email);
-            if (existingUser == null)
-            {
-                var newAdmin = new ApplicationUser
-                {
-                    UserName = userName,
-                    Email = email,
-                    EmailConfirmed = true
-                };
-
-                var createResult = await userManager.CreateAsync(newAdmin, password);
-                if (createResult.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(newAdmin, "Admin");
-                    Console.WriteLine($"✅ Usuário {userName} criado com sucesso!");
-                }
-                else
-                {
-                    Console.WriteLine($"❌ Erro ao criar {userName}: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"ℹ️ Usuário {userName} já existe.");
-            }
         }
 
         Console.WriteLine("✅ Inicialização de dados concluída!");
@@ -412,6 +416,7 @@ using (var scope = app.Services.CreateScope())
 // ===== FIM SEED =====
 
 // ===== CONFIGURAÇÃO DE ARQUIVOS ESTÁTICOS =====
+
 //PRODUÇÃO
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -460,7 +465,6 @@ public static class SeedData
 {
     public static async Task Initialize(AppDbContext context)
     {
-        // Verifica se já existem produtos para evitar duplicação
         if (!context.Products.Any())
         {
             Console.WriteLine("🔄 Inserindo dados de produtos de exemplo...");
@@ -505,10 +509,6 @@ public static class SeedData
             );
             await context.SaveChangesAsync();
             Console.WriteLine("✅ Dados de produtos de exemplo inseridos com sucesso!");
-        }
-        else
-        {
-            Console.WriteLine("ℹ️ Produtos já existem no banco de dados. Pulando seed de produtos.");
         }
     }
 }
