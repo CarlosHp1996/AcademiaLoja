@@ -34,8 +34,4 @@ COPY --from=publish /app/publish .
 # Cria diretório para imagens (se necessário)
 RUN mkdir -p /app/ImagensBackend
 
-# Adiciona usuário não-root para segurança
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
-USER appuser
-
 ENTRYPOINT ["dotnet", "AcademiaLoja.Web.dll"]
