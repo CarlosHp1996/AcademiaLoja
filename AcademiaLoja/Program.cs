@@ -469,6 +469,67 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
+        // Criar usuário Admin Rivael
+        var adminUserRivael = await userManager.FindByEmailAsync("rivaelrocha@icloud.com");
+        if (adminUserRivael == null)
+        {
+            adminUserRivael = new ApplicationUser
+            {
+                UserName = "RivaelAdmin",
+                Email = "rivaelrocha@icloud.com",
+                EmailConfirmed = true
+            };
+
+            var resultRivael = await userManager.CreateAsync(adminUserRivael, "@Rivael123");
+            if (resultRivael.Succeeded)
+            {
+                await userManager.AddToRoleAsync(adminUserRivael, "Admin");
+                Console.WriteLine("✅ Usuário Admin Rivael criado com sucesso!");
+            }
+            else
+            {
+                Console.WriteLine($"❌ Erro ao criar usuário Admin Rivael: {string.Join(", ", resultRivael.Errors.Select(e => e.Description))}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("ℹ️  Usuário Admin Rivael já existe.");
+        }
+
+        // Criar usuários Admin adicionais para teste
+        for (int i = 1; i <= 5; i++)
+        {
+            string userName = $"admin{i}";
+            string email = $"admin{i}@gmail.com";
+            string password = $"@Admin{i}";
+
+            var existingUser = await userManager.FindByEmailAsync(email);
+            if (existingUser == null)
+            {
+                var newAdmin = new ApplicationUser
+                {
+                    UserName = userName,
+                    Email = email,
+                    EmailConfirmed = true
+                };
+
+                var createResult = await userManager.CreateAsync(newAdmin, password);
+                if (createResult.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newAdmin, "Admin");
+                    Console.WriteLine($"✅ Usuário {userName} criado com sucesso!");
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Erro ao criar {userName}: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"ℹ️ Usuário {userName} já existe.");
+            }
+        }
+
         Console.WriteLine("✅ Usuários inicializados!");
     }
     catch (Exception ex)
