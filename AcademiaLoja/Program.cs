@@ -21,23 +21,80 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===== CONFIGURAÇÃO DE CONNECTION STRING =====
-string connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ??
-                          builder.Configuration.GetConnectionString("DefaultConnection") ??
-                          throw new InvalidOperationException("Connection string not found!");
+// ===== FUNÇÃO PARA CONVERTER DATABASE_URL =====
+string ConvertDatabaseUrl(string databaseUrl)
+{
+    if (string.IsNullOrEmpty(databaseUrl))
+        return string.Empty;
 
-// Logging seguro da connection string
-try
-{
-    var safeConnectionString = connectionString.Contains("Password=")
-        ? connectionString.Substring(0, connectionString.IndexOf("Password=") + 9) + "***HIDDEN***" + connectionString.Substring(connectionString.IndexOf(";", connectionString.IndexOf("Password=")))
-        : connectionString;
-    Console.WriteLine($"🔗 Connection String: {safeConnectionString}");
+    try
+    {
+        var uri = new Uri(databaseUrl);
+        var host = uri.Host;
+        var port = uri.Port;
+        var database = uri.AbsolutePath.Trim('/');
+        var username = uri.UserInfo.Split(':')[0];
+        var password = uri.UserInfo.Split(':')[1];
+
+        return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Erro ao converter DATABASE_URL: {ex.Message}");
+        return databaseUrl; // Retorna original se falhar
+    }
 }
-catch
+
+// ===== FUNÇÃO PARA CONVERTER REDIS_URL =====
+string ConvertRedisUrl(string redisUrl)
 {
-    Console.WriteLine("🔗 Connection String configured");
+    if (string.IsNullOrEmpty(redisUrl))
+        return "localhost:6379";
+
+    try
+    {
+        if (redisUrl.StartsWith("redis://"))
+        {
+            var uri = new Uri(redisUrl);
+            var host = uri.Host;
+            var port = uri.Port;
+            var password = !string.IsNullOrEmpty(uri.UserInfo) ? uri.UserInfo.Split(':').Last() : null;
+
+            if (!string.IsNullOrEmpty(password))
+            {
+                return $"{host}:{port},password={password}";
+            }
+            else
+            {
+                return $"{host}:{port}";
+            }
+        }
+        return redisUrl;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Erro ao converter REDIS_URL: {ex.Message}");
+        return "localhost:6379";
+    }
 }
+
+// ===== CONFIGURAÇÃO DE CONNECTION STRING =====
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string connectionString;
+
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    connectionString = ConvertDatabaseUrl(databaseUrl);
+    Console.WriteLine("🔗 Usando DATABASE_URL do Railway");
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                      throw new InvalidOperationException("Connection string not found!");
+    Console.WriteLine("🔗 Usando connection string local");
+}
+
+Console.WriteLine($"🔗 Connection String: {connectionString.Substring(0, Math.Min(50, connectionString.Length))}...");
 // ===== FIM CONFIGURAÇÃO CONNECTION STRING =====
 
 // Add services to the container.
@@ -65,16 +122,27 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
             errorCodesToAdd: null);
+        npgsqlOptions.CommandTimeout(30);
     }));
 // ===== FIM CONFIGURAÇÃO DBCONTEXT =====
 
 // ===== CONFIGURAÇÃO REDIS =====
-var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_URL") ??
-                           builder.Configuration.GetConnectionString("Redis") ??
-                           "localhost:6379";
+var redisUrl = Environment.GetEnvironmentVariable("REDIS_URL");
+string redisConnectionString;
+
+if (!string.IsNullOrEmpty(redisUrl))
+{
+    redisConnectionString = ConvertRedisUrl(redisUrl);
+    Console.WriteLine("🔗 Usando REDIS_URL do Railway");
+}
+else
+{
+    redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+    Console.WriteLine("🔗 Usando Redis connection string local");
+}
 
 Console.WriteLine($"🔗 Redis Connection: {redisConnectionString}");
 
@@ -91,8 +159,7 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"❌ Erro ao configurar Redis: {ex.Message}");
-    Console.WriteLine("⚠️ Continuando sem Redis Cache...");
-    // Fallback para cache em memória
+    Console.WriteLine("⚠️ Usando cache em memória como fallback...");
     builder.Services.AddMemoryCache();
     builder.Services.AddScoped<ICartService, CartService>();
 }
@@ -268,11 +335,14 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var cache = scope.ServiceProvider.GetRequiredService<IDistributedCache>();
-        await cache.SetStringAsync("test-connection", "Redis conectado com sucesso!", new DistributedCacheEntryOptions
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        await cache.SetStringAsync("test-connection", "Redis conectado!", new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
-        });
-        var testValue = await cache.GetStringAsync("test-connection");
+        }, cts.Token);
+
+        var testValue = await cache.GetStringAsync("test-connection", cts.Token);
 
         if (testValue != null)
         {
@@ -280,13 +350,13 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            Console.WriteLine("❌ Erro na conexão com Redis");
+            Console.WriteLine("❌ Redis teste falhou");
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Erro ao conectar com Redis: {ex.Message}");
-        Console.WriteLine("⚠️ Continuando sem Redis Cache...");
+        Console.WriteLine($"❌ Erro ao testar Redis: {ex.Message}");
+        Console.WriteLine("⚠️ Aplicação continuará sem Redis Cache...");
     }
 }
 // ===== FIM TESTE REDIS =====
@@ -302,13 +372,32 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("🔄 Verificando conexão com o banco de dados...");
         var context = services.GetRequiredService<AppDbContext>();
 
-        // Testar conexão com timeout
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var canConnect = await context.Database.CanConnectAsync(cts.Token);
+        // Testar conexão com timeout maior
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
 
-        if (!canConnect)
+        // Tentar conectar várias vezes
+        bool connected = false;
+        for (int attempt = 1; attempt <= 5; attempt++)
         {
-            throw new InvalidOperationException("Não foi possível conectar ao banco de dados");
+            try
+            {
+                Console.WriteLine($"🔄 Tentativa {attempt} de conexão...");
+                connected = await context.Database.CanConnectAsync(cts.Token);
+                if (connected) break;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Tentativa {attempt} falhou: {ex.Message}");
+                if (attempt < 5)
+                {
+                    await Task.Delay(5000, cts.Token); // Aguarda 5 segundos antes da próxima tentativa
+                }
+            }
+        }
+
+        if (!connected)
+        {
+            throw new InvalidOperationException("Não foi possível conectar ao banco de dados após 5 tentativas");
         }
 
         Console.WriteLine("✅ Conexão com banco de dados estabelecida!");
@@ -319,8 +408,8 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("✅ Migrations aplicadas com sucesso!");
 
         // Seed de dados
-        await SeedData.Initialize(context);
-        Console.WriteLine("✅ Dados iniciais configurados!");
+        // await SeedData.Initialize(context);
+        // Console.WriteLine("✅ Dados iniciais configurados!");
 
     }
     catch (Exception ex)
@@ -333,8 +422,9 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine($"❌ ERRO INTERNO: {ex.InnerException.Message}");
         }
 
-        // Em produção, pode ser necessário falhar aqui
-        throw;
+        // Em produção, vamos tentar continuar sem o banco para debug
+        Console.WriteLine("⚠️ Continuando sem banco de dados inicializado...");
+        // throw; // Descomente em produção se quiser parar aqui
     }
 }
 // ===== FIM MIGRATIONS =====
@@ -342,15 +432,12 @@ using (var scope = app.Services.CreateScope())
 // ===== SEED DE USUÁRIOS =====
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-
     try
     {
-        Console.WriteLine("🔄 Inicializando dados do sistema...");
+        Console.WriteLine("🔄 Inicializando usuários do sistema...");
 
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
         // Criar roles
         string[] roleNames = { "User", "Admin" };
@@ -359,7 +446,7 @@ using (var scope = app.Services.CreateScope())
             if (!await roleManager.RoleExistsAsync(roleName))
             {
                 await roleManager.CreateAsync(new IdentityRole<Guid> { Name = roleName });
-                Console.WriteLine($"✅ Role '{roleName}' criada com sucesso!");
+                Console.WriteLine($"✅ Role '{roleName}' criada!");
             }
         }
 
@@ -378,39 +465,15 @@ using (var scope = app.Services.CreateScope())
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");
-                Console.WriteLine("✅ Usuário Admin criado com sucesso!");
-            }
-            else
-            {
-                Console.WriteLine($"❌ Erro ao criar usuário Admin: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                Console.WriteLine("✅ Admin Carlos criado!");
             }
         }
 
-        // Criar usuário Admin Rivael
-        var adminUserRivael = await userManager.FindByEmailAsync("rivaelrocha@icloud.com");
-        if (adminUserRivael == null)
-        {
-            adminUserRivael = new ApplicationUser
-            {
-                UserName = "RivaelAdmin",
-                Email = "rivaelrocha@icloud.com",
-                EmailConfirmed = true
-            };
-
-            var resultRivael = await userManager.CreateAsync(adminUserRivael, "@Rivael123");
-            if (resultRivael.Succeeded)
-            {
-                await userManager.AddToRoleAsync(adminUserRivael, "Admin");
-                Console.WriteLine("✅ Usuário Admin Rivael criado com sucesso!");
-            }
-        }
-
-        Console.WriteLine("✅ Inicialização de dados concluída!");
+        Console.WriteLine("✅ Usuários inicializados!");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "❌ Erro ao inicializar dados do sistema");
-        Console.WriteLine($"❌ ERRO AO CRIAR DADOS: {ex.Message}");
+        Console.WriteLine($"❌ Erro ao criar usuários: {ex.Message}");
     }
 }
 // ===== FIM SEED =====
@@ -461,54 +524,49 @@ Console.WriteLine($"🌐 Swagger disponível em: /swagger");
 
 app.Run();
 
-public static class SeedData
-{
-    public static async Task Initialize(AppDbContext context)
-    {
-        if (!context.Products.Any())
-        {
-            Console.WriteLine("🔄 Inserindo dados de produtos de exemplo...");
+// public static class SeedData
+// {
+//     public static async Task Initialize(AppDbContext context)
+//     {
+//         try
+//         {
+//             if (!context.Products.Any())
+//             {
+//                 Console.WriteLine("🔄 Inserindo produtos de exemplo...");
 
-            context.Products.AddRange(
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Whey Protein Concentrado",
-                    Description = "Whey protein de alta qualidade para ganho de massa muscular.",
-                    Price = 120.00m,
-                    StockQuantity = 100,
-                    ImageUrl = "/imagens/whey-protein.jpg",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                },
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Creatina Monohidratada",
-                    Description = "Suplemento para aumento de força e desempenho.",
-                    Price = 80.00m,
-                    StockQuantity = 150,
-                    ImageUrl = "/imagens/creatina.jpg",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                },
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "BCAA em Pó",
-                    Description = "Aminoácidos de cadeia ramificada para recuperação muscular.",
-                    Price = 75.00m,
-                    StockQuantity = 80,
-                    ImageUrl = "/imagens/bcaa.jpg",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                }
-            );
-            await context.SaveChangesAsync();
-            Console.WriteLine("✅ Dados de produtos de exemplo inseridos com sucesso!");
-        }
-    }
-}
+//                 context.Products.AddRange(
+//                     new Product
+//                     {
+//                         Id = Guid.NewGuid(),
+//                         Name = "Whey Protein Concentrado",
+//                         Description = "Whey protein de alta qualidade para ganho de massa muscular.",
+//                         Price = 120.00m,
+//                         StockQuantity = 100,
+//                         ImageUrl = "/imagens/whey-protein.jpg",
+//                         IsActive = true,
+//                         CreatedAt = DateTime.UtcNow,
+//                         UpdatedAt = DateTime.UtcNow
+//                     },
+//                     new Product
+//                     {
+//                         Id = Guid.NewGuid(),
+//                         Name = "Creatina Monohidratada",
+//                         Description = "Suplemento para aumento de força e desempenho.",
+//                         Price = 80.00m,
+//                         StockQuantity = 150,
+//                         ImageUrl = "/imagens/creatina.jpg",
+//                         IsActive = true,
+//                         CreatedAt = DateTime.UtcNow,
+//                         UpdatedAt = DateTime.UtcNow
+//                     }
+//                 );
+//                 await context.SaveChangesAsync();
+//                 Console.WriteLine("✅ Produtos inseridos!");
+//             }
+//         }
+//         catch (Exception ex)
+//         {
+//             Console.WriteLine($"❌ Erro ao inserir produtos: {ex.Message}");
+//         }
+//     }
+// }
