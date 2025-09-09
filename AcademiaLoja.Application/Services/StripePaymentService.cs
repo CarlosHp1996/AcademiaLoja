@@ -13,8 +13,8 @@ namespace AcademiaLoja.Application.Services
         public StripePaymentService(IConfiguration configuration, ILogger<StripePaymentService> logger)
         {
             // Configurar a chave secreta da Stripe
-            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY_ACADEMIA") ??
-                         configuration["Stripe:STRIPE_SECRET_KEY_ACADEMIA"];
+            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ??
+                         configuration["Stripe:STRIPE_SECRET_KEY"];
             _logger = logger;
         }
 

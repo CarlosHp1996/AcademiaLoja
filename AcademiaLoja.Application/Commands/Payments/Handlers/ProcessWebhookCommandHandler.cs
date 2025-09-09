@@ -35,7 +35,7 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
 
             try
             {
-                var webhookSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET_ACADEMIA") ??
+                var webhookSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ??
                          _configuration["Stripe:STRIPE_WEBHOOK_SECRET_ACADEMIA"];
 
                 if (string.IsNullOrEmpty(webhookSecret))
@@ -136,7 +136,7 @@ namespace AcademiaLoja.Application.Commands.Payments.Handlers
             existingPayment.PaymentMethod = "stripe";
             existingPayment.Amount = paymentIntent.Amount / 100m; // Convert from cents to decimal value
             existingPayment.Currency = paymentIntent.Currency;
-            existingPayment.UpdatedAt = DateTime.UtcNow;       
+            existingPayment.UpdatedAt = DateTime.UtcNow;
 
             // Save the payment to the database
             await _paymentRepository.UpdateAsync(existingPayment);

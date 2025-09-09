@@ -22,7 +22,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== CONFIGURAÇÃO DE CONNECTION STRING =====
-string connectionString = Environment.GetEnvironmentVariable("ACADEMIALOJA_DB_CONNECTION") ??
+string connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ??
                           builder.Configuration.GetConnectionString("DefaultConnection") ??
                           throw new InvalidOperationException("Connection string not found!");
 
@@ -55,7 +55,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ===== FIM CONFIGURAÇÃO DBCONTEXT =====
 
 // ===== CONFIGURAÇÃO REDIS =====
-var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ??
+var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_URL") ??
                            builder.Configuration.GetConnectionString("Redis") ??
                            "localhost:6379";
 

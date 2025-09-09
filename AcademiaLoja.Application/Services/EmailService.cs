@@ -6,51 +6,51 @@ using System.Text.RegularExpressions;
 
 namespace AcademiaLoja.Application.Services
 {
-    public class EmailService : IEmailService
+  public class EmailService : IEmailService
+  {
+    private readonly ResendClient _resendClient;
+    private readonly string _senderEmail;
+    private readonly string _senderName;
+
+    public EmailService(IConfiguration configuration)
     {
-        private readonly ResendClient _resendClient;
-        private readonly string _senderEmail;
-        private readonly string _senderName;
+      var apiKey = Environment.GetEnvironmentVariable("API_KEY_RESEND_ACADEMIA") ??
+                   configuration["Resend:API_KEY_RESEND_ACADEMIA"];
 
-        public EmailService(IConfiguration configuration)
-        {
-            var apiKey = Environment.GetEnvironmentVariable("API_KEY_RESEND_ACADEMIA") ??
-                         configuration["Resend:API_KEY_RESEND_ACADEMIA"];
+      if (string.IsNullOrWhiteSpace(apiKey))
+        throw new InvalidOperationException("A variável de ambiente 'API_KEY_RESEND_ACADEMIA' não está configurada.");
 
-            if (string.IsNullOrWhiteSpace(apiKey))
-                throw new InvalidOperationException("A variável de ambiente 'API_KEY_RESEND_ACADEMIA' não está configurada.");
+      _resendClient = (ResendClient)ResendClient.Create(apiKey);
 
-            _resendClient = (ResendClient)ResendClient.Create(apiKey);
+      _senderEmail = Environment.GetEnvironmentVariable("SENDER_EMAIL") ??
+                     configuration["Resend:SENDER_EMAIL"];
 
-            _senderEmail = Environment.GetEnvironmentVariable("SENDER_EMAIL_ACADEMIA") ??
-                           configuration["Resend:SENDER_EMAIL_ACADEMIA"];
+      _senderName = Environment.GetEnvironmentVariable("SENDER_NAME_ACADEMIA") ??
+                    configuration["Resend:SENDER_NAME_ACADEMIA"];
+    }
 
-            _senderName = Environment.GetEnvironmentVariable("SENDER_NAME_ACADEMIA") ??
-                          configuration["Resend:SENDER_NAME_ACADEMIA"];
-        }
+    public async Task SendEmailAsync(string toEmail, string subject, string body)
+    {
+      var emailMessage = new EmailMessage
+      {
+        From = $"{_senderName} <{_senderEmail}>",
+        To = new[] { toEmail },
+        Subject = subject,
+        HtmlBody = body
+      };
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
-        {
-            var emailMessage = new EmailMessage
-            {
-                From = $"{_senderName} <{_senderEmail}>",
-                To = new[] { toEmail },
-                Subject = subject,
-                HtmlBody = body
-            };
+      var response = await _resendClient.EmailSendAsync(emailMessage);
 
-            var response = await _resendClient.EmailSendAsync(emailMessage);
+      if (response.Exception != null)
+      {
+        throw new Exception($"Erro ao enviar email com Resend: {response.Exception.Message}");
+      }
+    }
 
-            if (response.Exception != null)
-            {
-                throw new Exception($"Erro ao enviar email com Resend: {response.Exception.Message}");
-            }
-        }
-
-        public async Task SendEmailConfirmationAsync(string email)
-        {
-            string subject = "Conta criada com sucesso - Power Rock Supplements";
-            string body = @"
+    public async Task SendEmailConfirmationAsync(string email)
+    {
+      string subject = "Conta criada com sucesso - Power Rock Supplements";
+      string body = @"
             <html>
               <body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;'>
                 <table align='center' width='100%' cellpadding='0' cellspacing='0' style='max-width: 600px; background-color: #ffffff; margin: 20px auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
@@ -84,13 +84,13 @@ namespace AcademiaLoja.Application.Services
               </body>
             </html>";
 
-            await SendEmailAsync(email, subject, body);
-        }
+      await SendEmailAsync(email, subject, body);
+    }
 
-        public async Task SendEmailConfirmationOrderAsync(string email)
-        {
-            string subject = "Pedido realizado com sucesso - Power Rock Supplements";
-            string body = @"
+    public async Task SendEmailConfirmationOrderAsync(string email)
+    {
+      string subject = "Pedido realizado com sucesso - Power Rock Supplements";
+      string body = @"
             <html>
               <body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;'>
                 <table align='center' width='100%' cellpadding='0' cellspacing='0' style='max-width: 600px; background-color: #ffffff; margin: 20px auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
@@ -123,16 +123,16 @@ namespace AcademiaLoja.Application.Services
                 </table>
               </body>
             </html>";
-            await SendEmailAsync(email, subject, body);
-        }
+      await SendEmailAsync(email, subject, body);
+    }
 
-        public async Task SendEmailForgoutPasswordAsync(string email)
-        {
-            // Codificar o email para uso seguro na URL
-            string encodedEmail = Uri.EscapeDataString(email);
+    public async Task SendEmailForgoutPasswordAsync(string email)
+    {
+      // Codificar o email para uso seguro na URL
+      string encodedEmail = Uri.EscapeDataString(email);
 
-            string subject = "Recuperação de senha - Power Rock Supplements";
-            string body = $@"
+      string subject = "Recuperação de senha - Power Rock Supplements";
+      string body = $@"
             <html>
               <body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;'>
                 <table align='center' width='100%' cellpadding='0' cellspacing='0' style='max-width: 600px; background-color: #ffffff; margin: 20px auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
@@ -166,13 +166,13 @@ namespace AcademiaLoja.Application.Services
                 </table>
               </body>
             </html>";
-            await SendEmailAsync(email, subject, body);
-        }
+      await SendEmailAsync(email, subject, body);
+    }
 
-        public async Task SendEmailConfirmationTrackingAsync(string email)
-        {
-            string subject = "Rastreamento do pedido - Power Rock Supplements";
-            string body = @"
+    public async Task SendEmailConfirmationTrackingAsync(string email)
+    {
+      string subject = "Rastreamento do pedido - Power Rock Supplements";
+      string body = @"
             <html>
               <body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;'>
                 <table align='center' width='100%' cellpadding='0' cellspacing='0' style='max-width: 600px; background-color: #ffffff; margin: 20px auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);'>
@@ -205,28 +205,28 @@ namespace AcademiaLoja.Application.Services
                 </table>
                 </body>
             </html>";
-            await SendEmailAsync(email, subject, body);
-        }
-
-        public async Task<bool> IsValidEmailAsync(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return false;
-
-            try
-            {
-                var mailAddress = new MailAddress(email);
-
-                if (!email.Contains("@") || !email.Split('@')[1].Contains("."))
-                    return false;
-
-                var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-                return regex.IsMatch(email);
-            }
-            catch
-            {
-                return false;
-            }
-        }
+      await SendEmailAsync(email, subject, body);
     }
+
+    public async Task<bool> IsValidEmailAsync(string email)
+    {
+      if (string.IsNullOrWhiteSpace(email))
+        return false;
+
+      try
+      {
+        var mailAddress = new MailAddress(email);
+
+        if (!email.Contains("@") || !email.Split('@')[1].Contains("."))
+          return false;
+
+        var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        return regex.IsMatch(email);
+      }
+      catch
+      {
+        return false;
+      }
+    }
+  }
 }

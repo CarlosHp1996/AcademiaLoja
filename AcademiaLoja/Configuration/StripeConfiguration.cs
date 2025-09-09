@@ -11,8 +11,8 @@ namespace AcademiaLoja.Web.Configuration
             services.AddScoped<IPaymentService, StripePaymentService>();
 
             // Configurar a chave secreta do Stripe
-            Stripe.StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY_ACADEMIA") ??
-                         configuration["Stripe:STRIPE_SECRET_KEY_ACADEMIA"];
+            Stripe.StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ??
+                         configuration["Stripe:STRIPE_SECRET_KEY"];
 
             return services;
         }
