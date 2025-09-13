@@ -36,12 +36,12 @@ namespace AcademiaLoja.Infra.Repositories
 
             // Inicializando a consulta
             var query = _context.Products
-                .Include(x => x.Attributes)                
+                .Include(x => x.Attributes)
                 .AsQueryable();
 
             // Aplicando os filtros
             if (!string.IsNullOrEmpty(filter.Name))
-                query = query.Where(p => p.Name.Contains(filter.Name));           
+                query = query.Where(p => EF.Functions.ILike(p.Name, $"%{filter.Name}%"));
 
             // Filtro por sabor usando o novo campo Flavor do enum
             if (filter.Flavors != null && filter.Flavors.Any())
@@ -208,7 +208,7 @@ namespace AcademiaLoja.Infra.Repositories
                     existingProduct.StockQuantity = (int)request.StockQuantity;
                 if (imageUrl != null)
                     existingProduct.ImageUrl = imageUrl;
-                if(request.IsActive is not null)
+                if (request.IsActive is not null)
                     existingProduct.IsActive = (bool)request.IsActive;
                 existingProduct.UpdatedAt = DateTime.UtcNow;
                 if (request.Benefit is not null)
@@ -231,7 +231,7 @@ namespace AcademiaLoja.Infra.Repositories
                         Quantity = (int)request.StockQuantity,
                         LastUpdated = DateTime.UtcNow
                     };
-                }                
+                }
 
                 // Atualizar atributos
                 // 1. Remover atributos antigos
@@ -250,7 +250,7 @@ namespace AcademiaLoja.Infra.Repositories
                             Category = attr.Category,
                             Objective = attr.Objective,
                             Accessory = attr.Accessory
-                        };                                                
+                        };
 
                         product.Attributes.Add(productAttribute);
                     }
@@ -272,7 +272,7 @@ namespace AcademiaLoja.Infra.Repositories
                     NutritionalInfo = product.NutritionalInfo,
                     IsActive = product.IsActive,
                     UpdatedAt = product.UpdatedAt,
-                    InventoryId = product.Inventory.Id,                   
+                    InventoryId = product.Inventory.Id,
                     Attributes = product.Attributes
                         .Select(a => new ProductAttributeDto
                         {
@@ -362,7 +362,7 @@ namespace AcademiaLoja.Infra.Repositories
                     Quantity = request.StockQuantity,
                     LastUpdated = now
                 };
-                _context.Inventories.Add(inventory);               
+                _context.Inventories.Add(inventory);
 
                 // Adicionar atributos do produto
                 var productAttributes = new List<ProductAttribute>();
@@ -408,7 +408,7 @@ namespace AcademiaLoja.Infra.Repositories
                         Category = a.Category,
                         Objective = a.Objective,
                         Accessory = a.Accessory
-                    }).ToList(),                    
+                    }).ToList(),
                     Message = "Product created successfully."
                 };
 
@@ -418,6 +418,6 @@ namespace AcademiaLoja.Infra.Repositories
             {
                 throw new Exception($"Error creating product: {ex.Message}", ex);
             }
-        }       
+        }
     }
 }
