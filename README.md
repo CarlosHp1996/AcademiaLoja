@@ -23,9 +23,4 @@
 <div style="display: inline_block">
   DDD, MVC, CQRS, Clean Architecture  
 </div><br>
-
-## 📝 Processo de desenvolvimento 
-<div style="display: inline_block">
-  1 - Estrutura criada, configuração incial criada, pacotes iniciais instalados ✅ <br><br>
-
 </div><br>
